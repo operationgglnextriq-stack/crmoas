@@ -1,10 +1,8 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/context/AuthContext'
 import { Deal, DealStatus } from '@/types'
-// import { DealStatusBadge } from '@/components/ui/Badge'
 import Modal from '@/components/ui/Modal'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import {
@@ -19,7 +17,6 @@ import {
 } from '@dnd-kit/core'
 import { useDraggable } from '@dnd-kit/core'
 import { differenceInDays } from 'date-fns'
-// import { nl } from 'date-fns/locale'
 
 const STAGES: { key: DealStatus; label: string; color: string; bg: string }[] = [
   { key: 'call', label: '📞 Call ingepland', color: 'border-blue-400', bg: 'bg-blue-50' },
@@ -32,27 +29,213 @@ const STAGES: { key: DealStatus; label: string; color: string; bg: string }[] = 
   { key: 'verloren', label: '❌ Verloren', color: 'border-red-400', bg: 'bg-red-50' },
 ]
 
-const PRODUCT_COLORS: Record<string, string> = {
-  website_std: 'bg-blue-100 text-blue-800',
-  website_maat: 'bg-indigo-100 text-indigo-800',
-  hosting: 'bg-gray-100 text-gray-700',
-  ai_scan_pro: 'bg-purple-100 text-purple-800',
-  ai_scan_dig: 'bg-violet-100 text-violet-800',
-  ai_agency: 'bg-pink-100 text-pink-800',
-  ink: 'bg-yellow-100 text-yellow-800',
-  comm_klant: 'bg-green-100 text-green-800',
-  comm_extern: 'bg-teal-100 text-teal-800',
+const PRODUCT_LABELS: Record<string, string> = {
+  website_std: 'Website Standaard', website_maat: 'Website Maatwerk',
+  hosting: 'Hosting', ai_scan_pro: 'AI Scan Pro', ai_scan_dig: 'AI Scan Digitaal',
+  ai_agency: 'AI Agency', ink: 'INK', comm_klant: 'Commissie Klant', comm_extern: 'Commissie Extern',
 }
 
-function DealCard({ deal, onClick }: { deal: Deal; onClick: () => void }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: deal.id })
-  const days = differenceInDays(new Date(), new Date(deal.created_at))
+export default function PipelinePage() {
+  const { teamMember } = useAuth()
+  const [deals, setDeals] = useState<Deal[]>([])
+  const [loading, setLoading] = useState(true)
+  const [activeDeal, setActiveDeal] = useState<Deal | null>(null)
+  const [showModal, setShowModal] = useState(false)
+  const [editDeal, setEditDeal] = useState<Deal | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState<Partial<Deal>>({})
 
-  const style = transform ? {
-    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-    zIndex: 1000,
-    opacity: isDragging ? 0.5 : 1,
-  } : undefined
+  const isManager = teamMember?.rol === 'founder' || teamMember?.rol === 'sales_manager'
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
+
+  const fetchDeals = useCallback(async () => {
+    const res = await fetch('/api/crud?table=deals')
+    const data = await res.json()
+    setDeals(Array.isArray(data) ? data.sort((a: Deal, b: Deal) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) : [])
+    setLoading(false)
+  }, [])
+
+  useEffect(() => { fetchDeals() }, [fetchDeals])
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const deal = deals.find(d => d.id === event.active.id)
+    setActiveDeal(deal ?? null)
+  }
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+    setActiveDeal(null)
+    if (!over || active.id === over.id) return
+    const newStatus = over.id as DealStatus
+    const deal = deals.find(d => d.id === active.id)
+    if (!deal || deal.deal_status === newStatus) return
+
+    setDeals(prev => prev.map(d => d.id === active.id ? { ...d, deal_status: newStatus } : d))
+    await fetch('/api/crud', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ table: 'deals', id: active.id, data: { deal_status: newStatus } })
+    })
+  }
+
+  const openNew = () => {
+    setEditDeal(null)
+    setForm({ deal_status: 'call', betaling_ontvangen: false, commissie_betaald: false })
+    setShowModal(true)
+  }
+
+  const openEdit = (deal: Deal) => {
+    setEditDeal(deal)
+    setForm(deal)
+    setShowModal(true)
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    if (editDeal) {
+      await fetch('/api/crud', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ table: 'deals', id: editDeal.id, data: form })
+      })
+    } else {
+      await fetch('/api/crud', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ table: 'deals', data: form })
+      })
+    }
+    setSaving(false)
+    setShowModal(false)
+    fetchDeals()
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Deal verwijderen?')) return
+    await fetch('/api/crud', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ table: 'deals', id })
+    })
+    fetchDeals()
+  }
+
+  if (loading) return <LoadingSpinner />
+
+  const totalPipeline = deals.filter(d => !['verloren','opgeleverd'].includes(d.deal_status))
+    .reduce((s, d) => s + (d.deal_waarde ?? 0), 0)
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-[#1B2A4A]">Sales Pipeline</h2>
+          <p className="text-sm text-gray-500">Pipeline waarde: <span className="font-semibold text-[#6B3FA0]">€{totalPipeline.toLocaleString('nl-NL')}</span></p>
+        </div>
+        {isManager && <button onClick={openNew} className="btn-primary">+ Nieuwe deal</button>}
+      </div>
+
+      <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <div className="flex gap-3 overflow-x-auto pb-4">
+          {STAGES.map(stage => (
+            <DroppableColumn
+              key={stage.key}
+              stage={stage}
+              deals={deals.filter(d => d.deal_status === stage.key)}
+              onEdit={openEdit}
+              onDelete={handleDelete}
+              isManager={isManager}
+            />
+          ))}
+        </div>
+        <DragOverlay>
+          {activeDeal && <DealCard deal={activeDeal} onEdit={() => {}} onDelete={() => {}} isDragging isManager={false} />}
+        </DragOverlay>
+      </DndContext>
+
+      {/* Deal modal */}
+      <Modal open={showModal} onClose={() => setShowModal(false)} title={editDeal ? 'Deal bewerken' : 'Nieuwe deal'} size="lg">
+        <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+          <div className="grid grid-cols-2 gap-4">
+            <div><label className="label">Bedrijfsnaam *</label>
+              <input className="input" value={form.bedrijfsnaam ?? ''} onChange={e => setForm(f => ({...f, bedrijfsnaam: e.target.value}))} /></div>
+            <div><label className="label">Product</label>
+              <select className="input" value={form.product ?? ''} onChange={e => setForm(f => ({...f, product: e.target.value as Deal['product']}))}>
+                <option value="">-</option>
+                {Object.entries(PRODUCT_LABELS).map(([v,l]) => <option key={v} value={v}>{l}</option>)}
+              </select></div>
+            <div><label className="label">Deal waarde (€)</label>
+              <input type="number" className="input" value={form.deal_waarde ?? ''} onChange={e => setForm(f => ({...f, deal_waarde: Number(e.target.value)}))} /></div>
+            <div><label className="label">Status</label>
+              <select className="input" value={form.deal_status ?? 'call'} onChange={e => setForm(f => ({...f, deal_status: e.target.value as DealStatus}))}>
+                {STAGES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
+              </select></div>
+            <div><label className="label">Closer</label>
+              <input className="input" value={form.closer_naam ?? ''} onChange={e => setForm(f => ({...f, closer_naam: e.target.value}))} /></div>
+            <div><label className="label">Setter</label>
+              <input className="input" value={form.setter_naam ?? ''} onChange={e => setForm(f => ({...f, setter_naam: e.target.value}))} /></div>
+            <div><label className="label">Commissie closer (€)</label>
+              <input type="number" className="input" value={form.commissie_closer ?? ''} onChange={e => setForm(f => ({...f, commissie_closer: Number(e.target.value)}))} /></div>
+            <div><label className="label">Commissie setter (€)</label>
+              <input type="number" className="input" value={form.commissie_setter ?? ''} onChange={e => setForm(f => ({...f, commissie_setter: Number(e.target.value)}))} /></div>
+          </div>
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="checkbox" checked={form.betaling_ontvangen ?? false} onChange={e => setForm(f => ({...f, betaling_ontvangen: e.target.checked}))} />
+              Betaling ontvangen
+            </label>
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="checkbox" checked={form.commissie_betaald ?? false} onChange={e => setForm(f => ({...f, commissie_betaald: e.target.checked}))} />
+              Commissie betaald
+            </label>
+          </div>
+          <div><label className="label">Notities</label>
+            <textarea className="input" rows={2} value={form.notities ?? ''} onChange={e => setForm(f => ({...f, notities: e.target.value}))} /></div>
+          <div className="flex gap-3 justify-end pt-2 border-t">
+            <button onClick={() => setShowModal(false)} className="btn-secondary">Annuleren</button>
+            <button onClick={handleSave} disabled={saving || !form.bedrijfsnaam} className="btn-primary disabled:opacity-50">
+              {saving ? 'Opslaan...' : editDeal ? 'Opslaan' : 'Deal aanmaken'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  )
+}
+
+function DroppableColumn({ stage, deals, onEdit, onDelete, isManager }: {
+  stage: typeof STAGES[0]; deals: Deal[]; onEdit: (d: Deal) => void; onDelete: (id: string) => void; isManager: boolean
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: stage.key })
+  const total = deals.reduce((s, d) => s + (d.deal_waarde ?? 0), 0)
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`flex-shrink-0 w-64 rounded-xl border-2 ${stage.color} ${stage.bg} transition-all ${isOver ? 'ring-2 ring-offset-1 ring-[#6B3FA0]' : ''}`}
+    >
+      <div className="p-3 border-b border-black/10">
+        <p className="font-semibold text-sm text-gray-700">{stage.label}</p>
+        <p className="text-xs text-gray-500">{deals.length} deals · €{total.toLocaleString('nl-NL')}</p>
+      </div>
+      <div className="p-2 space-y-2 min-h-[200px]">
+        {deals.map(deal => (
+          <DealCard key={deal.id} deal={deal} onEdit={onEdit} onDelete={onDelete} isManager={isManager} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function DealCard({ deal, onEdit, onDelete, isDragging, isManager }: {
+  deal: Deal; onEdit: (d: Deal) => void; onDelete: (id: string) => void; isDragging?: boolean; isManager: boolean
+}) {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({ id: deal.id })
+  const days = differenceInDays(new Date(), new Date(deal.created_at))
+  const isOld = days > 14
+
+  const style = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined
 
   return (
     <div
@@ -60,262 +243,18 @@ function DealCard({ deal, onClick }: { deal: Deal; onClick: () => void }) {
       style={style}
       {...listeners}
       {...attributes}
-      className="bg-white rounded-lg border border-gray-200 p-3 shadow-sm cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow"
+      className={`bg-white rounded-lg p-3 shadow-sm border border-gray-200 cursor-grab active:cursor-grabbing select-none ${isDragging ? 'opacity-50' : ''} ${isOld ? 'border-l-4 border-l-orange-400' : ''}`}
     >
-      <div className="flex items-start justify-between gap-2">
-        <p className="font-semibold text-[#1B2A4A] text-sm leading-tight">{deal.bedrijfsnaam}</p>
-        <button
-          onPointerDown={e => e.stopPropagation()}
-          onClick={e => { e.stopPropagation(); onClick() }}
-          className="text-gray-400 hover:text-gray-600 text-xs flex-shrink-0"
-        >
-          ⓘ
-        </button>
-      </div>
-      {deal.product && (
-        <span className={`badge text-xs mt-1 ${PRODUCT_COLORS[deal.product] ?? 'bg-gray-100 text-gray-700'}`}>
-          {deal.product.replace(/_/g, ' ')}
-        </span>
+      <p className="font-semibold text-sm text-[#1B2A4A] truncate">{deal.bedrijfsnaam}</p>
+      {deal.deal_waarde && <p className="text-sm font-bold text-[#1A7A3A]">€{deal.deal_waarde.toLocaleString('nl-NL')}</p>}
+      {deal.closer_naam && <p className="text-xs text-gray-400 mt-1">👤 {deal.closer_naam}</p>}
+      <p className="text-xs text-gray-400">{days}d geleden</p>
+      {isManager && (
+        <div className="flex gap-1 mt-2" onPointerDown={e => e.stopPropagation()}>
+          <button onClick={() => onEdit(deal)} className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100">Bewerk</button>
+          <button onClick={() => onDelete(deal.id)} className="text-xs px-2 py-1 bg-red-50 text-red-700 rounded hover:bg-red-100">Verwijder</button>
+        </div>
       )}
-      {deal.deal_waarde && (
-        <p className="text-sm font-bold text-[#1A7A3A] mt-2">
-          €{deal.deal_waarde.toLocaleString('nl-NL')}
-        </p>
-      )}
-      <div className="flex items-center justify-between mt-2">
-        <div className="text-xs text-gray-500 space-y-0.5">
-          {deal.closer_naam && <p>👤 {deal.closer_naam}</p>}
-          {deal.setter_naam && <p>📞 {deal.setter_naam}</p>}
-        </div>
-        <span className={`text-xs px-1.5 py-0.5 rounded ${days > 14 ? 'bg-red-100 text-red-700' : days > 7 ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'}`}>
-          {days}d
-        </span>
-      </div>
-    </div>
-  )
-}
-
-function KanbanColumn({
-  stage,
-  deals,
-  onCardClick,
-}: {
-  stage: typeof STAGES[0]
-  deals: Deal[]
-  onCardClick: (deal: Deal) => void
-}) {
-  const { setNodeRef, isOver } = useDroppable({ id: stage.key })
-  const total = deals.reduce((s, d) => s + (d.deal_waarde ?? 0), 0)
-
-  return (
-    <div className="flex-shrink-0 w-64">
-      <div className={`rounded-xl border-t-4 ${stage.color} bg-gray-50 flex flex-col h-full`}>
-        <div className="p-3 border-b border-gray-200">
-          <p className="font-semibold text-sm text-gray-800">{stage.label}</p>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="badge bg-gray-200 text-gray-700">{deals.length}</span>
-            {total > 0 && (
-              <span className="text-xs text-gray-500">€{total.toLocaleString('nl-NL')}</span>
-            )}
-          </div>
-        </div>
-        <div
-          ref={setNodeRef}
-          className={`flex-1 p-2 space-y-2 min-h-32 transition-colors rounded-b-xl ${isOver ? 'bg-blue-50' : ''}`}
-        >
-          {deals.map(deal => (
-            <DealCard key={deal.id} deal={deal} onClick={() => onCardClick(deal)} />
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-export default function PipelinePage() {
-  const { teamMember } = useAuth()
-  const supabase = createClient()
-  const [deals, setDeals] = useState<Deal[]>([])
-  const [loading, setLoading] = useState(true)
-  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null)
-  const [activeDeal, setActiveDeal] = useState<Deal | null>(null)
-  const [filterCloser, setFilterCloser] = useState('')
-  const [filterProduct, setFilterProduct] = useState('')
-  const [newDeal, setNewDeal] = useState({ bedrijfsnaam: '', product: '', deal_waarde: '', closer_naam: '', setter_naam: '' })
-  const [showNewDeal, setShowNewDeal] = useState(false)
-
-  const isManager = teamMember?.rol === 'founder' || teamMember?.rol === 'sales_manager'
-
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
-
-  const fetchDeals = useCallback(async () => {
-    let query = supabase.from('deals').select('*').order('created_at', { ascending: false })
-    if (!isManager && teamMember?.rol === 'closer') {
-      query = query.eq('closer_naam', teamMember.naam)
-    }
-    const { data } = await query
-    setDeals(data ?? [])
-    setLoading(false)
-  }, [teamMember, isManager])
-
-  useEffect(() => {
-    if (teamMember) fetchDeals()
-  }, [teamMember, fetchDeals])
-
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveDeal(deals.find(d => d.id === event.active.id) ?? null)
-  }
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event
-    setActiveDeal(null)
-    if (!over) return
-    const dealId = active.id as string
-    const newStatus = over.id as DealStatus
-    const deal = deals.find(d => d.id === dealId)
-    if (!deal || deal.deal_status === newStatus) return
-    setDeals(prev => prev.map(d => d.id === dealId ? { ...d, deal_status: newStatus } : d))
-    await supabase.from('deals').update({ deal_status: newStatus }).eq('id', dealId)
-  }
-
-  const handleCreateDeal = async () => {
-    const { error } = await supabase.from('deals').insert({
-      bedrijfsnaam: newDeal.bedrijfsnaam,
-      product: newDeal.product || null,
-      deal_waarde: newDeal.deal_waarde ? Number(newDeal.deal_waarde) : null,
-      closer_naam: newDeal.closer_naam || null,
-      setter_naam: newDeal.setter_naam || null,
-      deal_status: 'call',
-    })
-    if (!error) {
-      setShowNewDeal(false)
-      setNewDeal({ bedrijfsnaam: '', product: '', deal_waarde: '', closer_naam: '', setter_naam: '' })
-      fetchDeals()
-    }
-  }
-
-  const closers = Array.from(new Set(deals.map(d => d.closer_naam).filter(Boolean)))
-
-  const filtered = deals.filter(d => {
-    if (filterCloser && d.closer_naam !== filterCloser) return false
-    if (filterProduct && d.product !== filterProduct) return false
-    return true
-  })
-
-  if (loading) return <LoadingSpinner />
-
-  return (
-    <div className="space-y-4">
-      {/* Filters + actions */}
-      <div className="flex flex-wrap items-center gap-3">
-        <select value={filterCloser} onChange={e => setFilterCloser(e.target.value)} className="input !w-40">
-          <option value="">Alle closers</option>
-          {closers.map(c => <option key={c!} value={c!}>{c}</option>)}
-        </select>
-        <select value={filterProduct} onChange={e => setFilterProduct(e.target.value)} className="input !w-44">
-          <option value="">Alle producten</option>
-          {['website_std','website_maat','hosting','ai_scan_pro','ai_scan_dig','ai_agency','ink','comm_klant','comm_extern'].map(p => (
-            <option key={p} value={p}>{p.replace(/_/g, ' ')}</option>
-          ))}
-        </select>
-        <div className="ml-auto">
-          <button onClick={() => setShowNewDeal(true)} className="btn-primary">+ Nieuwe deal</button>
-        </div>
-      </div>
-
-      {/* Kanban */}
-      <div className="overflow-x-auto pb-4 kanban-scroll">
-        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <div className="flex gap-4" style={{ minWidth: 'max-content' }}>
-            {STAGES.map(stage => (
-              <KanbanColumn
-                key={stage.key}
-                stage={stage}
-                deals={filtered.filter(d => d.deal_status === stage.key)}
-                onCardClick={setSelectedDeal}
-              />
-            ))}
-          </div>
-          <DragOverlay>
-            {activeDeal && (
-              <div className="bg-white rounded-lg border-2 border-[#6B3FA0] p-3 shadow-xl w-64 opacity-90">
-                <p className="font-semibold text-[#1B2A4A] text-sm">{activeDeal.bedrijfsnaam}</p>
-                {activeDeal.deal_waarde && (
-                  <p className="text-sm font-bold text-[#1A7A3A]">€{activeDeal.deal_waarde.toLocaleString('nl-NL')}</p>
-                )}
-              </div>
-            )}
-          </DragOverlay>
-        </DndContext>
-      </div>
-
-      {/* Deal detail modal */}
-      <Modal open={!!selectedDeal} onClose={() => setSelectedDeal(null)} title={selectedDeal?.bedrijfsnaam ?? ''} size="lg">
-        {selectedDeal && (
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <Row label="Product" value={selectedDeal.product?.replace(/_/g, ' ')} />
-            <Row label="Waarde" value={selectedDeal.deal_waarde ? `€${selectedDeal.deal_waarde.toLocaleString('nl-NL')}` : '-'} />
-            <Row label="Status" value={selectedDeal.deal_status} />
-            <Row label="Closer" value={selectedDeal.closer_naam} />
-            <Row label="Setter" value={selectedDeal.setter_naam} />
-            <Row label="Kanaal" value={selectedDeal.kanaal} />
-            <Row label="Betaling ontvangen" value={selectedDeal.betaling_ontvangen ? '✅ Ja' : '❌ Nee'} />
-            <Row label="Commissie betaald" value={selectedDeal.commissie_betaald ? '✅ Ja' : '❌ Nee'} />
-            {selectedDeal.notities && (
-              <div className="col-span-2">
-                <p className="text-gray-500 mb-1">Notities</p>
-                <p className="text-gray-800 bg-gray-50 p-3 rounded-lg">{selectedDeal.notities}</p>
-              </div>
-            )}
-          </div>
-        )}
-      </Modal>
-
-      {/* New deal modal */}
-      <Modal open={showNewDeal} onClose={() => setShowNewDeal(false)} title="Nieuwe deal aanmaken">
-        <div className="space-y-4">
-          <div>
-            <label className="label">Bedrijfsnaam *</label>
-            <input className="input" value={newDeal.bedrijfsnaam} onChange={e => setNewDeal(f => ({ ...f, bedrijfsnaam: e.target.value }))} />
-          </div>
-          <div>
-            <label className="label">Product</label>
-            <select className="input" value={newDeal.product} onChange={e => setNewDeal(f => ({ ...f, product: e.target.value }))}>
-              <option value="">Selecteer...</option>
-              {['website_std','website_maat','hosting','ai_scan_pro','ai_scan_dig','ai_agency','ink','comm_klant','comm_extern'].map(p => (
-                <option key={p} value={p}>{p.replace(/_/g, ' ')}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="label">Deal waarde (€)</label>
-            <input type="number" className="input" value={newDeal.deal_waarde} onChange={e => setNewDeal(f => ({ ...f, deal_waarde: e.target.value }))} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label">Closer</label>
-              <input className="input" value={newDeal.closer_naam} onChange={e => setNewDeal(f => ({ ...f, closer_naam: e.target.value }))} />
-            </div>
-            <div>
-              <label className="label">Setter</label>
-              <input className="input" value={newDeal.setter_naam} onChange={e => setNewDeal(f => ({ ...f, setter_naam: e.target.value }))} />
-            </div>
-          </div>
-          <div className="flex gap-3 pt-2 justify-end">
-            <button onClick={() => setShowNewDeal(false)} className="btn-secondary">Annuleren</button>
-            <button onClick={handleCreateDeal} disabled={!newDeal.bedrijfsnaam} className="btn-primary disabled:opacity-50">Deal aanmaken</button>
-          </div>
-        </div>
-      </Modal>
-    </div>
-  )
-}
-
-function Row({ label, value }: { label: string; value: string | null | undefined }) {
-  return (
-    <div>
-      <p className="text-gray-500 text-xs">{label}</p>
-      <p className="font-medium text-gray-800">{value || '-'}</p>
     </div>
   )
 }

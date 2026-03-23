@@ -50,7 +50,7 @@ export default function LeadsPage() {
   })
 
   const handleDelete = async (lead: Lead) => {
-    await supabase.from('leads').delete().eq('id', lead.id)
+    await fetch('/api/crud', { method: 'DELETE', headers: {'Content-Type':'application/json'}, body: JSON.stringify({table:'leads', id: lead.id}) })
     setLeads(prev => prev.filter(l => l.id !== lead.id))
   }
 
