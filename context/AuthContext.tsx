@@ -25,32 +25,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
+  const fetchTeamMember = async () => {
+    try {
+      const res = await fetch('/api/me')
+      if (res.ok) {
+        const data = await res.json()
+        setTeamMember(data)
+      } else {
+        setTeamMember(null)
+      }
+    } catch {
+      setTeamMember(null)
+    }
+  }
+
   useEffect(() => {
-    const fetchUser = async () => {
+    const init = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
-      if (user) {
-        const { data } = await supabase
-          .from('team_members')
-          .select('*')
-          .eq('email', user.email)
-          .single()
-        setTeamMember(data)
-      }
+      if (user) await fetchTeamMember()
       setLoading(false)
     }
 
-    fetchUser()
+    init()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null)
       if (session?.user) {
-        const { data } = await supabase
-          .from('team_members')
-          .select('*')
-          .eq('email', session.user.email)
-          .single()
-        setTeamMember(data)
+        await fetchTeamMember()
       } else {
         setTeamMember(null)
       }
