@@ -1,4 +1,4 @@
-export type Rol = 'founder' | 'sales_manager' | 'setter' | 'outreacher' | 'closer' | 'creator' | 'ambassadeur'
+export type Rol = 'founder' | 'sales_manager' | 'setter' | 'outreacher' | 'closer' | 'creator' | 'ambassadeur' | 'web_developer'
 export type Afdeling = 'sales' | 'outreach' | 'content' | 'management' | 'tech'
 
 export interface TeamMember {
@@ -78,6 +78,8 @@ export interface OutreachLead {
 export type Product = 'website_std' | 'website_maat' | 'hosting' | 'ai_scan_pro' | 'ai_scan_dig' | 'ai_agency' | 'ink' | 'comm_klant' | 'comm_extern'
 export type DealStatus = 'call' | 'offerte' | 'onderhand' | 'gesloten' | 'betaald' | 'levering' | 'opgeleverd' | 'verloren'
 
+export const WEBSITE_PRODUCTEN: Product[] = ['website_std', 'website_maat', 'hosting']
+
 export interface Deal {
   id: string
   created_at: string
@@ -98,6 +100,7 @@ export interface Deal {
   commissie_closer: number | null
   commissie_creator: number | null
   commissie_manager: number | null
+  commissie_web_developer: number | null
   commissie_betaald: boolean
   upsell_hosting: boolean
   scan_check: boolean
@@ -130,6 +133,8 @@ export interface Dagrapport {
   cold_calls: number
   calls_geboekt: number
   deals_bijgedragen: number
+  actieve_gesprekken: number
+  volle_ups: number
   pijnpunten: string | null
   blokkades: string | null
   op_tijd: boolean
@@ -145,4 +150,11 @@ export function calcBANT(lead: Partial<Lead>): BANTScore {
   if (score >= 3) return 'sterk'
   if (score >= 2) return 'matig'
   return 'zwak'
+}
+
+// Bereken web developer commissie (25% van website deals)
+export function calcWebDevCommissie(deal_waarde: number | null, product: Product | null): number {
+  if (!deal_waarde || !product) return 0
+  if (!WEBSITE_PRODUCTEN.includes(product)) return 0
+  return Math.round(deal_waarde * 0.25)
 }

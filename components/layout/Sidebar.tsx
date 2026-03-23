@@ -32,6 +32,7 @@ const rolLabels: Record<Rol, string> = {
   closer: 'Closer',
   creator: 'Creator',
   ambassadeur: 'Ambassadeur',
+  web_developer: 'Web Developer',
 }
 
 export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {

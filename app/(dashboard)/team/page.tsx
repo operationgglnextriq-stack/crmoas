@@ -10,12 +10,14 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner'
 const ROL_LABELS: Record<Rol, string> = {
   founder: 'Founder', sales_manager: 'Sales Manager', setter: 'Appointment Setter',
   outreacher: 'Cold Outreacher', closer: 'Closer', creator: 'Creator', ambassadeur: 'Ambassadeur',
+  web_developer: 'Web Developer',
 }
 const ROL_COLORS: Record<Rol, string> = {
   founder: 'bg-purple-100 text-purple-800', sales_manager: 'bg-blue-100 text-blue-800',
   setter: 'bg-green-100 text-green-800', outreacher: 'bg-orange-100 text-orange-800',
   closer: 'bg-red-100 text-red-800', creator: 'bg-pink-100 text-pink-800',
   ambassadeur: 'bg-teal-100 text-teal-800',
+  web_developer: 'bg-indigo-100 text-indigo-800',
 }
 
 interface AuthUser { id: string; email: string }
@@ -32,6 +34,10 @@ export default function TeamPage() {
   const [resetTarget, setResetTarget] = useState<TeamMember | null>(null)
   const [nieuwWachtwoord, setNieuwWachtwoord] = useState('')
   const [resetSaving, setResetSaving] = useState(false)
+  const [showInviteModal, setShowInviteModal] = useState(false)
+  const [inviteForm, setInviteForm] = useState({ naam: '', email: '', rol: 'setter' as Rol, afdeling: 'sales' as Afdeling, commissie_pct: '', discord_naam: '' })
+  const [inviteSaving, setInviteSaving] = useState(false)
+  const [inviteMsg, setInviteMsg] = useState('')
   const [resetMsg, setResetMsg] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -142,6 +148,24 @@ export default function TeamPage() {
     }
   }
 
+  const handleInvite = async () => {
+    setInviteSaving(true)
+    setInviteMsg('')
+    const res = await fetch('/api/team/invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...inviteForm, commissie_pct: Number(inviteForm.commissie_pct) || 0 })
+    })
+    const data = await res.json()
+    setInviteSaving(false)
+    if (res.ok) {
+      setInviteMsg('✅ Uitnodigingsmail verstuurd naar ' + inviteForm.email)
+      setTimeout(() => { setShowInviteModal(false); setInviteMsg(''); fetchData() }, 2000)
+    } else {
+      setInviteMsg('❌ ' + (data.error ?? 'Fout bij versturen'))
+    }
+  }
+
   if (!isManager) return <div className="card text-center py-12 text-gray-400">Geen toegang tot teambeheer.</div>
   if (loading) return <LoadingSpinner />
 
@@ -155,7 +179,10 @@ export default function TeamPage() {
           </button>
         ))}
         <div className="ml-auto pb-2">
-          <button onClick={openNieuw} className="btn-primary">+ Teamlid toevoegen</button>
+          <div className="flex gap-2">
+            <button onClick={() => { setInviteForm({ naam: '', email: '', rol: 'setter', afdeling: 'sales', commissie_pct: '', discord_naam: '' }); setInviteMsg(''); setShowInviteModal(true) }} className="btn-secondary">📧 Uitnodiging sturen</button>
+            <button onClick={openNieuw} className="btn-primary">+ Teamlid toevoegen</button>
+          </div>
         </div>
       </div>
 
@@ -260,6 +287,25 @@ export default function TeamPage() {
           </div>
         </div>
       </Modal>
+
+      <Modal open={showInviteModal} onClose={() => setShowInviteModal(false)} title="Uitnodiging versturen" size="lg">
+      <div className="space-y-4">
+        <p className="text-sm text-gray-500">De ontvanger krijgt een e-mail met een link om een wachtwoord in te stellen en in te loggen.</p>
+        <div className="grid grid-cols-2 gap-4">
+          <div><label className="label">Naam *</label><input className="input" value={inviteForm.naam} onChange={e => setInviteForm(f => ({...f, naam: e.target.value}))} /></div>
+          <div><label className="label">E-mailadres *</label><input type="email" className="input" value={inviteForm.email} onChange={e => setInviteForm(f => ({...f, email: e.target.value}))} /></div>
+          <div><label className="label">Rol</label><select className="input" value={inviteForm.rol} onChange={e => setInviteForm(f => ({...f, rol: e.target.value as Rol}))}>{Object.entries(ROL_LABELS).map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></div>
+          <div><label className="label">Afdeling</label><select className="input" value={inviteForm.afdeling} onChange={e => setInviteForm(f => ({...f, afdeling: e.target.value as Afdeling}))}>{['sales','outreach','content','management','tech'].map(a => <option key={a} value={a}>{a}</option>)}</select></div>
+          <div><label className="label">Commissie %</label><input type="number" min="0" max="100" className="input" value={inviteForm.commissie_pct} onChange={e => setInviteForm(f => ({...f, commissie_pct: e.target.value}))} /></div>
+          <div><label className="label">Discord naam</label><input className="input" value={inviteForm.discord_naam} onChange={e => setInviteForm(f => ({...f, discord_naam: e.target.value}))} /></div>
+        </div>
+        {inviteMsg && <p className="text-sm font-medium">{inviteMsg}</p>}
+        <div className="flex gap-3 justify-end pt-2 border-t">
+          <button onClick={() => setShowInviteModal(false)} className="btn-secondary">Annuleren</button>
+          <button onClick={handleInvite} disabled={inviteSaving || !inviteForm.naam || !inviteForm.email} className="btn-primary disabled:opacity-50">{inviteSaving ? 'Versturen...' : '📧 Uitnodiging versturen'}</button>
+        </div>
+      </div>
+    </Modal>
 
       <ConfirmModal
         open={!!deactiveerTarget}

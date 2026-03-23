@@ -2,18 +2,12 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useAuth } from '@/context/AuthContext'
-import { Deal, DealStatus } from '@/types'
+import { Deal, DealStatus, TeamMember } from '@/types'
 import Modal from '@/components/ui/Modal'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import {
-  DndContext,
-  DragEndEvent,
-  DragOverlay,
-  DragStartEvent,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  useDroppable,
+  DndContext, DragEndEvent, DragOverlay, DragStartEvent,
+  PointerSensor, useSensor, useSensors, useDroppable,
 } from '@dnd-kit/core'
 import { useDraggable } from '@dnd-kit/core'
 import { differenceInDays } from 'date-fns'
@@ -38,6 +32,7 @@ const PRODUCT_LABELS: Record<string, string> = {
 export default function PipelinePage() {
   const { teamMember } = useAuth()
   const [deals, setDeals] = useState<Deal[]>([])
+  const [leden, setLeden] = useState<TeamMember[]>([])
   const [loading, setLoading] = useState(true)
   const [activeDeal, setActiveDeal] = useState<Deal | null>(null)
   const [showModal, setShowModal] = useState(false)
@@ -46,13 +41,27 @@ export default function PipelinePage() {
   const [form, setForm] = useState<Partial<Deal>>({})
 
   const isManager = teamMember?.rol === 'founder' || teamMember?.rol === 'sales_manager'
+  const isCloser = teamMember?.rol === 'closer'
+  const naam = teamMember?.naam ?? ''
+
+  const canEdit = (deal: Deal) => {
+    if (isManager) return true
+    if (isCloser && deal.closer_naam === naam) return true
+    return false
+  }
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
 
   const fetchDeals = useCallback(async () => {
-    const res = await fetch('/api/crud?table=deals')
-    const data = await res.json()
-    setDeals(Array.isArray(data) ? data.sort((a: Deal, b: Deal) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) : [])
+    const [dealsRes, ledenRes] = await Promise.all([
+      fetch('/api/crud?table=deals'),
+      fetch('/api/crud?table=team_members'),
+    ])
+    const dealsData = await dealsRes.json()
+    const ledenData = await ledenRes.json()
+    setDeals(Array.isArray(dealsData) ? dealsData.sort((a: Deal, b: Deal) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) : [])
+    setLeden(Array.isArray(ledenData) ? ledenData.filter((l: TeamMember) => l.actief) : [])
     setLoading(false)
   }, [])
 
@@ -60,6 +69,7 @@ export default function PipelinePage() {
 
   const handleDragStart = (event: DragStartEvent) => {
     const deal = deals.find(d => d.id === event.active.id)
+    if (deal && !canEdit(deal)) return
     setActiveDeal(deal ?? null)
   }
 
@@ -69,7 +79,7 @@ export default function PipelinePage() {
     if (!over || active.id === over.id) return
     const newStatus = over.id as DealStatus
     const deal = deals.find(d => d.id === active.id)
-    if (!deal || deal.deal_status === newStatus) return
+    if (!deal || deal.deal_status === newStatus || !canEdit(deal)) return
 
     setDeals(prev => prev.map(d => d.id === active.id ? { ...d, deal_status: newStatus } : d))
     await fetch('/api/crud', {
@@ -81,11 +91,12 @@ export default function PipelinePage() {
 
   const openNew = () => {
     setEditDeal(null)
-    setForm({ deal_status: 'call', betaling_ontvangen: false, commissie_betaald: false })
+    setForm({ deal_status: 'call', betaling_ontvangen: false, commissie_betaald: false, setter_naam: naam })
     setShowModal(true)
   }
 
   const openEdit = (deal: Deal) => {
+    if (!canEdit(deal)) return
     setEditDeal(deal)
     setForm(deal)
     setShowModal(true)
@@ -126,6 +137,9 @@ export default function PipelinePage() {
   const totalPipeline = deals.filter(d => !['verloren','opgeleverd'].includes(d.deal_status))
     .reduce((s, d) => s + (d.deal_waarde ?? 0), 0)
 
+  const closers = leden.filter(l => ['closer','sales_manager','founder'].includes(l.rol))
+  const setters = leden.filter(l => ['setter','sales_manager','founder'].includes(l.rol))
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -133,24 +147,20 @@ export default function PipelinePage() {
           <h2 className="text-lg font-bold text-[#1B2A4A]">Sales Pipeline</h2>
           <p className="text-sm text-gray-500">Pipeline waarde: <span className="font-semibold text-[#6B3FA0]">€{totalPipeline.toLocaleString('nl-NL')}</span></p>
         </div>
-        {isManager && <button onClick={openNew} className="btn-primary">+ Nieuwe deal</button>}
+        {(isManager || isCloser) && <button onClick={openNew} className="btn-primary">+ Nieuwe deal</button>}
       </div>
 
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div className="flex gap-3 overflow-x-auto pb-4">
           {STAGES.map(stage => (
-            <DroppableColumn
-              key={stage.key}
-              stage={stage}
+            <DroppableColumn key={stage.key} stage={stage}
               deals={deals.filter(d => d.deal_status === stage.key)}
-              onEdit={openEdit}
-              onDelete={handleDelete}
-              isManager={isManager}
-            />
+              onEdit={openEdit} onDelete={handleDelete}
+              canEditDeal={canEdit} isManager={isManager} />
           ))}
         </div>
         <DragOverlay>
-          {activeDeal && <DealCard deal={activeDeal} onEdit={() => {}} onDelete={() => {}} isDragging isManager={false} />}
+          {activeDeal && <DealCard deal={activeDeal} onEdit={() => {}} onDelete={() => {}} isDragging canEdit={false} isManager={false} />}
         </DragOverlay>
       </DndContext>
 
@@ -172,24 +182,34 @@ export default function PipelinePage() {
                 {STAGES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
               </select></div>
             <div><label className="label">Closer</label>
-              <input className="input" value={form.closer_naam ?? ''} onChange={e => setForm(f => ({...f, closer_naam: e.target.value}))} /></div>
+              <select className="input" value={form.closer_naam ?? ''} onChange={e => setForm(f => ({...f, closer_naam: e.target.value}))}>
+                <option value="">-</option>
+                {closers.map(l => <option key={l.id} value={l.naam}>{l.naam}</option>)}
+              </select></div>
             <div><label className="label">Setter</label>
-              <input className="input" value={form.setter_naam ?? ''} onChange={e => setForm(f => ({...f, setter_naam: e.target.value}))} /></div>
+              <select className="input" value={form.setter_naam ?? ''} onChange={e => setForm(f => ({...f, setter_naam: e.target.value}))}>
+                <option value="">-</option>
+                {setters.map(l => <option key={l.id} value={l.naam}>{l.naam}</option>)}
+              </select></div>
             <div><label className="label">Commissie closer (€)</label>
               <input type="number" className="input" value={form.commissie_closer ?? ''} onChange={e => setForm(f => ({...f, commissie_closer: Number(e.target.value)}))} /></div>
             <div><label className="label">Commissie setter (€)</label>
               <input type="number" className="input" value={form.commissie_setter ?? ''} onChange={e => setForm(f => ({...f, commissie_setter: Number(e.target.value)}))} /></div>
+            <div><label className="label">Commissie web dev (€)</label>
+              <input type="number" className="input" value={form.commissie_web_developer ?? ''} onChange={e => setForm(f => ({...f, commissie_web_developer: Number(e.target.value)}))} /></div>
           </div>
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input type="checkbox" checked={form.betaling_ontvangen ?? false} onChange={e => setForm(f => ({...f, betaling_ontvangen: e.target.checked}))} />
-              Betaling ontvangen
-            </label>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input type="checkbox" checked={form.commissie_betaald ?? false} onChange={e => setForm(f => ({...f, commissie_betaald: e.target.checked}))} />
-              Commissie betaald
-            </label>
-          </div>
+          {isManager && (
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" checked={form.betaling_ontvangen ?? false} onChange={e => setForm(f => ({...f, betaling_ontvangen: e.target.checked}))} />
+                Betaling ontvangen
+              </label>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" checked={form.commissie_betaald ?? false} onChange={e => setForm(f => ({...f, commissie_betaald: e.target.checked}))} />
+                Commissie uitbetaald
+              </label>
+            </div>
+          )}
           <div><label className="label">Notities</label>
             <textarea className="input" rows={2} value={form.notities ?? ''} onChange={e => setForm(f => ({...f, notities: e.target.value}))} /></div>
           <div className="flex gap-3 justify-end pt-2 border-t">
@@ -204,55 +224,49 @@ export default function PipelinePage() {
   )
 }
 
-function DroppableColumn({ stage, deals, onEdit, onDelete, isManager }: {
-  stage: typeof STAGES[0]; deals: Deal[]; onEdit: (d: Deal) => void; onDelete: (id: string) => void; isManager: boolean
+function DroppableColumn({ stage, deals, onEdit, onDelete, canEditDeal, isManager }: {
+  stage: typeof STAGES[0]; deals: Deal[]; onEdit: (d: Deal) => void; onDelete: (id: string) => void
+  canEditDeal: (d: Deal) => boolean; isManager: boolean
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.key })
   const total = deals.reduce((s, d) => s + (d.deal_waarde ?? 0), 0)
-
   return (
-    <div
-      ref={setNodeRef}
-      className={`flex-shrink-0 w-64 rounded-xl border-2 ${stage.color} ${stage.bg} transition-all ${isOver ? 'ring-2 ring-offset-1 ring-[#6B3FA0]' : ''}`}
-    >
+    <div ref={setNodeRef} className={`flex-shrink-0 w-64 rounded-xl border-2 ${stage.color} ${stage.bg} transition-all ${isOver ? 'ring-2 ring-offset-1 ring-[#6B3FA0]' : ''}`}>
       <div className="p-3 border-b border-black/10">
         <p className="font-semibold text-sm text-gray-700">{stage.label}</p>
         <p className="text-xs text-gray-500">{deals.length} deals · €{total.toLocaleString('nl-NL')}</p>
       </div>
       <div className="p-2 space-y-2 min-h-[200px]">
         {deals.map(deal => (
-          <DealCard key={deal.id} deal={deal} onEdit={onEdit} onDelete={onDelete} isManager={isManager} />
+          <DealCard key={deal.id} deal={deal} onEdit={onEdit} onDelete={onDelete}
+            canEdit={canEditDeal(deal)} isManager={isManager} />
         ))}
       </div>
     </div>
   )
 }
 
-function DealCard({ deal, onEdit, onDelete, isDragging, isManager }: {
-  deal: Deal; onEdit: (d: Deal) => void; onDelete: (id: string) => void; isDragging?: boolean; isManager: boolean
+function DealCard({ deal, onEdit, onDelete, isDragging, canEdit, isManager }: {
+  deal: Deal; onEdit: (d: Deal) => void; onDelete: (id: string) => void
+  isDragging?: boolean; canEdit: boolean; isManager: boolean
 }) {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({ id: deal.id })
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({ id: deal.id, disabled: !canEdit })
   const days = differenceInDays(new Date(), new Date(deal.created_at))
-  const isOld = days > 14
 
   const style = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...listeners}
-      {...attributes}
-      className={`bg-white rounded-lg p-3 shadow-sm border border-gray-200 cursor-grab active:cursor-grabbing select-none ${isDragging ? 'opacity-50' : ''} ${isOld ? 'border-l-4 border-l-orange-400' : ''}`}
-    >
+    <div ref={setNodeRef} style={style} {...(canEdit ? listeners : {})} {...(canEdit ? attributes : {})}
+      className={`bg-white rounded-lg p-3 shadow-sm border border-gray-200 ${canEdit ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'} select-none ${isDragging ? 'opacity-50' : ''} ${days > 14 ? 'border-l-4 border-l-orange-400' : ''}`}>
       <p className="font-semibold text-sm text-[#1B2A4A] truncate">{deal.bedrijfsnaam}</p>
       {deal.deal_waarde && <p className="text-sm font-bold text-[#1A7A3A]">€{deal.deal_waarde.toLocaleString('nl-NL')}</p>}
-      {deal.closer_naam && <p className="text-xs text-gray-400 mt-1">👤 {deal.closer_naam}</p>}
+      {deal.closer_naam && <p className="text-xs text-gray-500 mt-1">👤 {deal.closer_naam}</p>}
+      {deal.setter_naam && <p className="text-xs text-gray-400">🎯 {deal.setter_naam}</p>}
       <p className="text-xs text-gray-400">{days}d geleden</p>
-      {isManager && (
+      {canEdit && (
         <div className="flex gap-1 mt-2" onPointerDown={e => e.stopPropagation()}>
           <button onClick={() => onEdit(deal)} className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100">Bewerk</button>
-          <button onClick={() => onDelete(deal.id)} className="text-xs px-2 py-1 bg-red-50 text-red-700 rounded hover:bg-red-100">Verwijder</button>
+          {isManager && <button onClick={() => onDelete(deal.id)} className="text-xs px-2 py-1 bg-red-50 text-red-700 rounded hover:bg-red-100">Verwijder</button>}
         </div>
       )}
     </div>
