@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ duplicaat: false })
   }
 
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
 
   const [{ data: leads }, { data: outreach }] = await Promise.all([
     supabase
