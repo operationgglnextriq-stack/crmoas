@@ -1,0 +1,283 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { useAuth } from '@/context/AuthContext'
+import { TeamMember, Rol, Afdeling } from '@/types'
+import Modal from '@/components/ui/Modal'
+import { ConfirmModal } from '@/components/ui/Modal'
+import LoadingSpinner from '@/components/ui/LoadingSpinner'
+
+const ROL_LABELS: Record<Rol, string> = {
+  founder: 'Founder',
+  sales_manager: 'Sales Manager',
+  setter: 'Appointment Setter',
+  outreacher: 'Cold Outreacher',
+  closer: 'Closer',
+  creator: 'Creator',
+  ambassadeur: 'Ambassadeur',
+}
+
+const ROL_COLORS: Record<Rol, string> = {
+  founder: 'bg-purple-100 text-purple-800',
+  sales_manager: 'bg-blue-100 text-blue-800',
+  setter: 'bg-green-100 text-green-800',
+  outreacher: 'bg-orange-100 text-orange-800',
+  closer: 'bg-red-100 text-red-800',
+  creator: 'bg-pink-100 text-pink-800',
+  ambassadeur: 'bg-teal-100 text-teal-800',
+}
+
+export default function TeamPage() {
+  const { teamMember } = useAuth()
+  const supabase = createClient()
+  const [leden, setLeden] = useState<TeamMember[]>([])
+  const [loading, setLoading] = useState(true)
+  const [tab, setTab] = useState<'sales' | 'outreach'>('sales')
+  const [showModal, setShowModal] = useState(false)
+  const [editTarget, setEditTarget] = useState<TeamMember | null>(null)
+  const [deactiveerTarget, setDeactiveerTarget] = useState<TeamMember | null>(null)
+  const [saving, setSaving] = useState(false)
+
+  const [form, setForm] = useState({
+    naam: '', email: '', wachtwoord: '', rol: 'setter' as Rol,
+    afdeling: 'sales' as Afdeling, commissie_pct: '', discord_naam: '',
+  })
+
+  const isManager = teamMember?.rol === 'founder' || teamMember?.rol === 'sales_manager'
+
+  const fetchData = async () => {
+    const { data } = await supabase.from('team_members').select('*').order('naam')
+    setLeden(data ?? [])
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    if (isManager) fetchData()
+    else setLoading(false)
+  }, [isManager])
+
+  const salesTeam = leden.filter(l => ['setter', 'closer', 'creator', 'ambassadeur', 'sales_manager'].includes(l.rol))
+  const outreachTeam = leden.filter(l => l.rol === 'outreacher')
+
+  const displayTeam = tab === 'sales' ? salesTeam : outreachTeam
+
+  const openNieuw = () => {
+    setEditTarget(null)
+    setForm({ naam: '', email: '', wachtwoord: '', rol: 'setter', afdeling: 'sales', commissie_pct: '', discord_naam: '' })
+    setShowModal(true)
+  }
+
+  const openEdit = (lid: TeamMember) => {
+    setEditTarget(lid)
+    setForm({
+      naam: lid.naam,
+      email: lid.email,
+      wachtwoord: '',
+      rol: lid.rol as Rol,
+      afdeling: lid.afdeling as Afdeling ?? 'sales',
+      commissie_pct: String(lid.commissie_pct ?? ''),
+      discord_naam: lid.discord_naam ?? '',
+    })
+    setShowModal(true)
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    if (editTarget) {
+      // Update bestaand lid
+      await supabase.from('team_members').update({
+        naam: form.naam,
+        rol: form.rol,
+        afdeling: form.afdeling,
+        commissie_pct: Number(form.commissie_pct) || 0,
+        discord_naam: form.discord_naam || null,
+      }).eq('id', editTarget.id)
+    } else {
+      // Nieuw lid aanmaken via Supabase Auth Admin
+      const res = await fetch('/api/team/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: form.email,
+          password: form.wachtwoord,
+          naam: form.naam,
+          rol: form.rol,
+          afdeling: form.afdeling,
+          commissie_pct: Number(form.commissie_pct) || 0,
+          discord_naam: form.discord_naam || null,
+        }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        alert('Fout: ' + (err.error ?? 'Onbekende fout'))
+        setSaving(false)
+        return
+      }
+    }
+    setSaving(false)
+    setShowModal(false)
+    fetchData()
+  }
+
+  const handleDeactiveer = async (lid: TeamMember) => {
+    await supabase.from('team_members').update({ actief: !lid.actief }).eq('id', lid.id)
+    fetchData()
+  }
+
+  if (!isManager) {
+    return <div className="card text-center py-12 text-gray-400">Geen toegang tot teambeheer.</div>
+  }
+
+  if (loading) return <LoadingSpinner />
+
+  return (
+    <div className="space-y-6">
+      {/* Tabs */}
+      <div className="flex gap-4 border-b border-gray-200">
+        {(['sales', 'outreach'] as const).map(t => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors capitalize ${
+              tab === t
+                ? 'border-[#6B3FA0] text-[#6B3FA0]'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {t === 'sales' ? '💼 Sales Team' : '📞 Outreach Team'}
+          </button>
+        ))}
+        <div className="ml-auto pb-2">
+          <button onClick={openNieuw} className="btn-primary">+ Teamlid toevoegen</button>
+        </div>
+      </div>
+
+      {/* Team table */}
+      <div className="card !p-0 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Naam</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Rol</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">E-mail</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Discord</th>
+                <th className="text-right px-4 py-3 font-semibold text-gray-700">Commissie %</th>
+                <th className="text-right px-4 py-3 font-semibold text-gray-700">Omzet</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Status</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Acties</th>
+              </tr>
+            </thead>
+            <tbody>
+              {displayTeam.map((lid, i) => (
+                <tr key={lid.id} className={`border-b border-gray-100 hover:bg-gray-50 ${i % 2 === 1 ? 'bg-gray-50/50' : ''} ${!lid.actief ? 'opacity-50' : ''}`}>
+                  <td className="px-4 py-3 font-medium text-[#1B2A4A]">{lid.naam}</td>
+                  <td className="px-4 py-3">
+                    <span className={`badge ${ROL_COLORS[lid.rol as Rol]}`}>{ROL_LABELS[lid.rol as Rol]}</span>
+                  </td>
+                  <td className="px-4 py-3 text-gray-500 text-xs">{lid.email}</td>
+                  <td className="px-4 py-3 text-gray-500 text-xs">{lid.discord_naam ?? '-'}</td>
+                  <td className="px-4 py-3 text-right font-medium">{lid.commissie_pct}%</td>
+                  <td className="px-4 py-3 text-right text-[#1A7A3A] font-semibold">
+                    €{(lid.totale_omzet ?? 0).toLocaleString('nl-NL')}
+                  </td>
+                  <td className="px-4 py-3">
+                    {lid.actief
+                      ? <span className="badge bg-green-100 text-green-700">✓ Actief</span>
+                      : <span className="badge bg-gray-100 text-gray-500">Inactief</span>
+                    }
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-1">
+                      <button onClick={() => openEdit(lid)} className="text-xs px-2 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100">
+                        Bewerk
+                      </button>
+                      <button
+                        onClick={() => setDeactiveerTarget(lid)}
+                        className={`text-xs px-2 py-1 rounded ${lid.actief ? 'bg-orange-50 text-orange-700 hover:bg-orange-100' : 'bg-green-50 text-green-700 hover:bg-green-100'}`}
+                      >
+                        {lid.actief ? 'Deactiveer' : 'Activeer'}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {displayTeam.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="px-4 py-12 text-center text-gray-400">Geen teamleden gevonden</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Add/Edit modal */}
+      <Modal open={showModal} onClose={() => setShowModal(false)} title={editTarget ? 'Teamlid bewerken' : 'Teamlid toevoegen'} size="lg">
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="label">Naam *</label>
+              <input className="input" value={form.naam} onChange={e => setForm(f => ({ ...f, naam: e.target.value }))} />
+            </div>
+            <div>
+              <label className="label">E-mailadres *</label>
+              <input type="email" className="input" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} disabled={!!editTarget} />
+            </div>
+          </div>
+          {!editTarget && (
+            <div>
+              <label className="label">Wachtwoord *</label>
+              <input type="password" className="input" value={form.wachtwoord} onChange={e => setForm(f => ({ ...f, wachtwoord: e.target.value }))} />
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="label">Rol</label>
+              <select className="input" value={form.rol} onChange={e => setForm(f => ({ ...f, rol: e.target.value as Rol }))}>
+                {Object.entries(ROL_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="label">Afdeling</label>
+              <select className="input" value={form.afdeling} onChange={e => setForm(f => ({ ...f, afdeling: e.target.value as Afdeling }))}>
+                {['sales','outreach','content','management','tech'].map(a => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="label">Commissie %</label>
+              <input type="number" min="0" max="100" step="0.5" className="input" value={form.commissie_pct} onChange={e => setForm(f => ({ ...f, commissie_pct: e.target.value }))} />
+            </div>
+            <div>
+              <label className="label">Discord naam</label>
+              <input className="input" value={form.discord_naam} onChange={e => setForm(f => ({ ...f, discord_naam: e.target.value }))} />
+            </div>
+          </div>
+          <div className="flex gap-3 justify-end pt-2 border-t">
+            <button onClick={() => setShowModal(false)} className="btn-secondary">Annuleren</button>
+            <button
+              onClick={handleSave}
+              disabled={saving || !form.naam || (!editTarget && (!form.email || !form.wachtwoord))}
+              className="btn-primary disabled:opacity-50"
+            >
+              {saving ? 'Opslaan...' : editTarget ? 'Wijzigingen opslaan' : 'Teamlid aanmaken'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <ConfirmModal
+        open={!!deactiveerTarget}
+        onClose={() => setDeactiveerTarget(null)}
+        onConfirm={() => deactiveerTarget && handleDeactiveer(deactiveerTarget)}
+        title={deactiveerTarget?.actief ? 'Teamlid deactiveren' : 'Teamlid activeren'}
+        message={`Weet je zeker dat je ${deactiveerTarget?.naam} wilt ${deactiveerTarget?.actief ? 'deactiveren' : 'activeren'}?`}
+        confirmLabel={deactiveerTarget?.actief ? 'Deactiveren' : 'Activeren'}
+        danger={deactiveerTarget?.actief}
+      />
+    </div>
+  )
+}
