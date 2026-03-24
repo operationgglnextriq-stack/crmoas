@@ -14,7 +14,7 @@ import { format } from 'date-fns'
 import { nl } from 'date-fns/locale'
 
 export default function LeadsPage() {
-  const { teamMember } = useAuth()
+  const { teamMember, loading: authLoading } = useAuth()
   const supabase = createClient()
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
@@ -38,7 +38,11 @@ export default function LeadsPage() {
     setLoading(false)
   }, [teamMember, isManager])
 
-  useEffect(() => { if (teamMember) fetchLeads() }, [teamMember, fetchLeads])
+  useEffect(() => {
+    if (authLoading) return
+    if (!teamMember) { setLoading(false); return }
+    fetchLeads()
+  }, [teamMember, authLoading, fetchLeads])
 
   const filtered = leads.filter(l => {
     if (search && !l.bedrijfsnaam.toLowerCase().includes(search.toLowerCase())) return false

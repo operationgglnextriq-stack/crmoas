@@ -39,17 +39,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setTeamMember(null)
       }
-    } catch {
+    } catch (e) {
+      console.error('fetchTeamMember error:', e)
       setTeamMember(null)
     }
   }
 
   useEffect(() => {
     const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-      if (user) await fetchTeamMember()
-      setLoading(false)
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        setUser(user)
+        if (user) await fetchTeamMember()
+      } catch (e) {
+        console.error('Auth init error:', e)
+      } finally {
+        setLoading(false)
+      }
     }
 
     init()

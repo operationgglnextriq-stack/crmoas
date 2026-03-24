@@ -10,7 +10,7 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns'
 
 export default function DashboardPage() {
-  const { teamMember } = useAuth()
+  const { teamMember, loading: authLoading } = useAuth()
   const supabase = createClient()
   const [loading, setLoading] = useState(true)
   const [leads, setLeads] = useState<Lead[]>([])
@@ -23,9 +23,10 @@ export default function DashboardPage() {
   const isManager = teamMember?.rol === 'founder' || teamMember?.rol === 'sales_manager'
 
   useEffect(() => {
-    if (!teamMember) return
+    if (authLoading) return
+    if (!teamMember) { setLoading(false); return }
     fetchData()
-  }, [teamMember])
+  }, [teamMember, authLoading])
 
   const fetchData = async () => {
     const now = new Date()
@@ -53,6 +54,16 @@ export default function DashboardPage() {
   }
 
   if (loading) return <LoadingSpinner />
+
+  if (!teamMember) {
+    return (
+      <div className="card text-center py-16">
+        <p className="text-3xl mb-3">⚠️</p>
+        <p className="text-lg font-bold text-[#1B2A4A] mb-2">Account niet gevonden</p>
+        <p className="text-sm text-gray-400">Je account is niet gekoppeld aan een teamlid. Neem contact op met de beheerder.</p>
+      </div>
+    )
+  }
 
   // Personal dashboard for non-managers
   if (!isManager) {
