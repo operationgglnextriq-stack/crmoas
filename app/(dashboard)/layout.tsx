@@ -17,6 +17,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [user, loading, router])
 
+  // Fallback: als loading na 8 seconden nog actief is, forceer doorgaan
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!user) router.push('/login')
+    }, 8000)
+    return () => clearTimeout(timer)
+  }, [user, router])
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">

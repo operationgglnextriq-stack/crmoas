@@ -109,6 +109,7 @@ export default function PipelinePage() {
     const setter = leden.find(l => l.naam === form.setter_naam)
     const closer = leden.find(l => l.naam === form.closer_naam)
     const creator = leden.find(l => l.naam === form.creator_naam)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const ambassadeur = leden.find(l => l.naam === (form as any).ambassadeur_naam)
     const salesManager = leden.find(l => l.rol === "sales_manager" && l.actief)
     const waarde = form.deal_waarde ?? 0
@@ -118,6 +119,7 @@ export default function PipelinePage() {
       commissie_setter: setter ? Math.round(waarde * (setter.commissie_pct / 100)) : (form.commissie_setter ?? 0),
       commissie_closer: closer ? Math.round(waarde * (closer.commissie_pct / 100)) : (form.commissie_closer ?? 0),
       commissie_creator: creator ? Math.round(waarde * (creator.commissie_pct / 100)) : (form.commissie_creator ?? 0),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       commissie_ambassadeur: ambassadeur ? Math.round(waarde * (ambassadeur.commissie_pct / 100)) : ((form as any).commissie_ambassadeur ?? 0),
       commissie_manager: salesManager ? Math.round(waarde * 0.05) : 0,
       commissie_web_developer: 0,
