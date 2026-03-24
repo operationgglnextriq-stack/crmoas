@@ -26,7 +26,8 @@ export async function updateSession(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const isAuthPage = request.nextUrl.pathname.startsWith('/login')
-  const isProtected = !isAuthPage && request.nextUrl.pathname !== '/'
+  const isApiRoute = request.nextUrl.pathname.startsWith('/api/')
+  const isProtected = !isAuthPage && !isApiRoute && request.nextUrl.pathname !== '/'
 
   if (isProtected && !user) {
     const url = request.nextUrl.clone()
