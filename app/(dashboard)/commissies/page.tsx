@@ -48,11 +48,38 @@ export default function CommissiesPage() {
     : gesloten
 
   const getCommissie = (deal: Deal, n: string) => {
+    const lid = leden.find(l => l.naam === n)
+    const pct = lid ? lid.commissie_pct / 100 : 0
+    const waarde = deal.deal_waarde ?? 0
+
     let total = 0
-    if (deal.closer_naam === n) total += deal.commissie_closer ?? 0
-    if (deal.setter_naam === n) total += deal.commissie_setter ?? 0
-    if (deal.creator_naam === n) total += deal.commissie_creator ?? 0
-    if (deal.ambassadeur_naam === n) total += deal.commissie_ambassadeur ?? 0
+
+    // Closer
+    if (deal.closer_naam === n) {
+      total += (deal.commissie_closer && deal.commissie_closer > 0)
+        ? deal.commissie_closer
+        : Math.round(waarde * pct)
+    }
+    // Setter
+    if (deal.setter_naam === n) {
+      total += (deal.commissie_setter && deal.commissie_setter > 0)
+        ? deal.commissie_setter
+        : Math.round(waarde * pct)
+    }
+    // Creator
+    if (deal.creator_naam === n) {
+      total += (deal.commissie_creator && deal.commissie_creator > 0)
+        ? deal.commissie_creator
+        : Math.round(waarde * pct)
+    }
+    // Ambassadeur
+    const dealAny = deal as any
+    if (dealAny.ambassadeur_naam === n) {
+      total += (dealAny.commissie_ambassadeur && dealAny.commissie_ambassadeur > 0)
+        ? dealAny.commissie_ambassadeur
+        : Math.round(waarde * pct)
+    }
+
     return total
   }
 

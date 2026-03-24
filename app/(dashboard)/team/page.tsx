@@ -91,6 +91,34 @@ export default function TeamPage() {
           commissie_pct: Number(form.commissie_pct) || 0, discord_naam: form.discord_naam || null,
         }})
       })
+      // Als commissie_pct gewijzigd is, herbereken alle deals van dit lid
+      const oudeCommissie = editTarget?.commissie_pct
+      const nieuweCommissie = Number(form.commissie_pct) || 0
+      if (oudeCommissie !== nieuweCommissie) {
+        const dealsRes = await apiFetch('/api/crud?table=deals')
+        if (dealsRes.ok) {
+          const allDeals = await dealsRes.json()
+          const lidDeals = allDeals.filter((d: any) =>
+            d.setter_naam === editTarget.naam ||
+            d.closer_naam === editTarget.naam ||
+            d.creator_naam === editTarget.naam
+          )
+          for (const deal of lidDeals) {
+            const waarde = deal.deal_waarde ?? 0
+            const pct = nieuweCommissie / 100
+            const updateData: any = {}
+            if (deal.setter_naam === editTarget.naam) updateData.commissie_setter = Math.round(waarde * pct)
+            if (deal.closer_naam === editTarget.naam) updateData.commissie_closer = Math.round(waarde * pct)
+            if (deal.creator_naam === editTarget.naam) updateData.commissie_creator = Math.round(waarde * pct)
+            if (Object.keys(updateData).length > 0) {
+              await apiFetch('/api/crud', {
+                method: 'PATCH',
+                body: JSON.stringify({ table: 'deals', id: deal.id, data: updateData })
+              })
+            }
+          }
+        }
+      }
     } else {
       const res = await apiFetch('/api/team/create', {
         method: 'POST',
