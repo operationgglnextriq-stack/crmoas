@@ -98,6 +98,7 @@ export default function TeamPage() {
         const dealsRes = await apiFetch('/api/crud?table=deals')
         if (dealsRes.ok) {
           const allDeals = await dealsRes.json()
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const lidDeals = allDeals.filter((d: any) =>
             d.setter_naam === editTarget.naam ||
             d.closer_naam === editTarget.naam ||
@@ -106,6 +107,7 @@ export default function TeamPage() {
           for (const deal of lidDeals) {
             const waarde = deal.deal_waarde ?? 0
             const pct = nieuweCommissie / 100
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const updateData: any = {}
             if (deal.setter_naam === editTarget.naam) updateData.commissie_setter = Math.round(waarde * pct)
             if (deal.closer_naam === editTarget.naam) updateData.commissie_closer = Math.round(waarde * pct)

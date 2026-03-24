@@ -73,6 +73,7 @@ export default function CommissiesPage() {
         : Math.round(waarde * pct)
     }
     // Ambassadeur
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dealAny = deal as any
     if (dealAny.ambassadeur_naam === n) {
       total += (dealAny.commissie_ambassadeur && dealAny.commissie_ambassadeur > 0)
