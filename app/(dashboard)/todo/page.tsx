@@ -60,6 +60,7 @@ export default function TodoPage() {
   const [filterStatus, setFilterStatus] = useState<TodoStatus | 'alle'>('alle')
   const [filterPrioriteit, setFilterPrioriteit] = useState<Prioriteit | 'alle'>('alle')
   const [showModal, setShowModal] = useState(false)
+  const [viewTodo, setViewTodo] = useState<Todo | null>(null)
   const [editTodo, setEditTodo] = useState<Todo | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editForm, setEditForm] = useState<Partial<Todo>>({})
@@ -288,12 +289,15 @@ export default function TodoPage() {
               </div>
 
               {/* Titel + omschrijving */}
-              <div>
-                <h3 className={`font-bold text-[#1B2A4A] text-sm leading-snug ${todo.status === 'gedaan' ? 'line-through text-gray-400' : ''}`}>
+              <div className="cursor-pointer" onClick={() => setViewTodo(todo)}>
+                <h3 className={`font-bold text-[#1B2A4A] text-sm leading-snug hover:text-[#6B3FA0] transition-colors ${todo.status === 'gedaan' ? 'line-through text-gray-400' : ''}`}>
                   {todo.titel}
                 </h3>
                 {todo.omschrijving && (
-                  <p className="text-gray-500 text-xs mt-1 leading-relaxed">{todo.omschrijving}</p>
+                  <p className="text-gray-500 text-xs mt-1 leading-relaxed line-clamp-2">{todo.omschrijving}</p>
+                )}
+                {!todo.omschrijving && (
+                  <p className="text-gray-300 text-xs mt-1 italic">Klik om te openen...</p>
                 )}
               </div>
 
@@ -452,6 +456,97 @@ export default function TodoPage() {
           </div>
         </form>
       </Modal>
+      {/* Detail view Modal */}
+      {viewTodo && (
+        <Modal open={!!viewTodo} onClose={() => setViewTodo(null)} title="📋 Taak details">
+          <div className="space-y-4">
+            {/* Status + Prioriteit badges */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className={`badge capitalize ${
+                viewTodo.prioriteit === 'urgent' ? 'bg-red-100 text-red-700' :
+                viewTodo.prioriteit === 'hoog' ? 'bg-orange-100 text-orange-700' :
+                viewTodo.prioriteit === 'normaal' ? 'bg-blue-100 text-blue-700' :
+                'bg-gray-100 text-gray-600'
+              }`}>{viewTodo.prioriteit}</span>
+              <span className={`badge capitalize ${
+                viewTodo.status === 'gedaan' ? 'bg-green-100 text-green-700' :
+                viewTodo.status === 'bezig' ? 'bg-yellow-100 text-yellow-700' :
+                'bg-slate-100 text-slate-600'
+              }`}>{viewTodo.status}</span>
+              {viewTodo.afdeling && <span className="badge bg-purple-100 text-purple-700">{viewTodo.afdeling}</span>}
+            </div>
+
+            {/* Titel */}
+            <div>
+              <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Taak</p>
+              <p className={`font-bold text-[#1B2A4A] text-lg ${viewTodo.status === 'gedaan' ? 'line-through text-gray-400' : ''}`}>
+                {viewTodo.titel}
+              </p>
+            </div>
+
+            {/* Omschrijving / Notities */}
+            {viewTodo.omschrijving ? (
+              <div>
+                <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Omschrijving / Notities</p>
+                <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                  {viewTodo.omschrijving}
+                </div>
+              </div>
+            ) : (
+              <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-400 italic">
+                Geen omschrijving toegevoegd
+              </div>
+            )}
+
+            {/* Meta info */}
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              {viewTodo.toegewezen_aan && (
+                <div>
+                  <p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Toegewezen aan</p>
+                  <p className="font-medium text-[#1B2A4A]">👤 {viewTodo.toegewezen_aan}</p>
+                </div>
+              )}
+              {viewTodo.deadline && (
+                <div>
+                  <p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Deadline</p>
+                  <p className="font-medium text-[#1B2A4A]">📅 {new Date(viewTodo.deadline).toLocaleDateString('nl-NL')}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Aangemaakt door</p>
+                <p className="font-medium text-gray-600">✍️ {viewTodo.aangemaakt_door}</p>
+              </div>
+            </div>
+
+            {/* Acties */}
+            <div className="flex gap-2 pt-2 border-t">
+              {viewTodo.status === 'open' && (
+                <button onClick={() => { handleStatusChange(viewTodo, 'bezig'); setViewTodo({...viewTodo, status: 'bezig'}) }}
+                  className="flex-1 text-sm py-2 rounded-lg bg-yellow-50 text-yellow-700 hover:bg-yellow-100 font-medium">
+                  ▶ Start
+                </button>
+              )}
+              {viewTodo.status === 'bezig' && (
+                <button onClick={() => { handleStatusChange(viewTodo, 'gedaan'); setViewTodo({...viewTodo, status: 'gedaan'}) }}
+                  className="flex-1 text-sm py-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 font-medium">
+                  ✅ Afronden
+                </button>
+              )}
+              {viewTodo.status === 'gedaan' && (
+                <button onClick={() => { handleStatusChange(viewTodo, 'open'); setViewTodo({...viewTodo, status: 'open'}) }}
+                  className="flex-1 text-sm py-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 font-medium">
+                  ↩ Heropenen
+                </button>
+              )}
+              <button onClick={() => { setViewTodo(null); openEdit(viewTodo) }}
+                className="text-sm py-2 px-4 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-medium">
+                ✏️ Bewerken
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       {/* Bewerk Modal */}
       <Modal open={showEditModal} onClose={() => setShowEditModal(false)} title="Taak bewerken">
         <div className="space-y-4">
