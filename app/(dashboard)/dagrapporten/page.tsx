@@ -107,7 +107,7 @@ export default function DagraportenPage() {
                 <th className="text-right px-4 py-3 font-semibold text-gray-700">Calls</th>
                 <th className="text-right px-4 py-3 font-semibold text-gray-700">Geboekt</th>
                 <th className="text-right px-4 py-3 font-semibold text-gray-700">Act. gesprekken</th>
-                <th className="text-right px-4 py-3 font-semibold text-gray-700">Volle-ups</th>
+                <th className="text-right px-4 py-3 font-semibold text-gray-700">Follow-ups</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">Op tijd</th>
                 {isManager && <th className="px-4 py-3"></th>}
               </tr>
@@ -168,7 +168,7 @@ export default function DagraportenPage() {
               <input type="number" min="0" className="input" value={form.deals_bijgedragen} onChange={e => setForm(f => ({...f, deals_bijgedragen: Number(e.target.value)}))} /></div>
             <div><label className="label">🗣️ Actieve gesprekken</label>
               <input type="number" min="0" className="input" value={form.actieve_gesprekken} onChange={e => setForm(f => ({...f, actieve_gesprekken: Number(e.target.value)}))} /></div>
-            <div><label className="label">🔄 Volle-ups</label>
+            <div><label className="label">🔄 Follow-ups</label>
               <input type="number" min="0" className="input" value={form.volle_ups} onChange={e => setForm(f => ({...f, volle_ups: Number(e.target.value)}))} /></div>
           </div>
 
