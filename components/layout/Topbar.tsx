@@ -9,6 +9,7 @@ const pageTitles: Record<string, string> = {
   '/outreach': 'Outreach',
   '/outreach/nieuw': 'Nieuw Contact',
   '/pipeline': 'Pipeline',
+  '/deals': 'Deals Overzicht',
   '/team': 'Team Beheer',
   '/commissies': 'Commissies',
   '/marktdata': 'Marktdata',

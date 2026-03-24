@@ -15,6 +15,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [leads, setLeads] = useState<Lead[]>([])
   const [deals, setDeals] = useState<Deal[]>([])
+  const [allDeals, setAllDeals] = useState<Deal[]>([])
   const [outreach, setOutreach] = useState<OutreachLead[]>([])
   const [dagrapporten, setDagrapporten] = useState<Dagrapport[]>([])
   const [marktdata, setMarktdata] = useState<Marktdata[]>([])
@@ -33,9 +34,10 @@ export default function DashboardPage() {
     const monthStart = startOfMonth(now).toISOString()
     const monthEnd = endOfMonth(now).toISOString()
 
-    const [l, d, o, dr, md] = await Promise.all([
+    const [l, d, ad, o, dr, md] = await Promise.all([
       supabase.from('leads').select('*').gte('created_at', weekStart).lte('created_at', weekEnd),
       supabase.from('deals').select('*').gte('created_at', monthStart).lte('created_at', monthEnd),
+      supabase.from('deals').select('*'),
       supabase.from('outreach_leads').select('*').gte('created_at', weekStart).lte('created_at', weekEnd),
       supabase.from('dagrapporten').select('*').eq('rapport_datum', format(now, 'yyyy-MM-dd')),
       supabase.from('marktdata').select('*'),
@@ -43,6 +45,7 @@ export default function DashboardPage() {
 
     setLeads(l.data ?? [])
     setDeals(d.data ?? [])
+    setAllDeals(ad.data ?? [])
     setOutreach(o.data ?? [])
     setDagrapporten(dr.data ?? [])
     setMarktdata(md.data ?? [])
@@ -100,11 +103,14 @@ export default function DashboardPage() {
   }
 
   // Manager/Founder dashboard
-  const pipelineWaarde = deals.reduce((s, d) => s + (d.deal_waarde ?? 0), 0)
+  const ACTIEVE_STATUSSEN = ['call', 'offerte', 'onderhand', 'gesloten', 'betaald', 'levering']
+  const pipelineWaarde = allDeals
+    .filter(d => ACTIEVE_STATUSSEN.includes(d.deal_status))
+    .reduce((s, d) => s + (d.deal_waarde ?? 0), 0)
   const geslotenDeals = deals.filter(d => d.deal_status === 'gesloten' || d.deal_status === 'betaald')
-  const openCommissies = deals
-    .filter(d => !d.commissie_betaald && (d.deal_status === 'gesloten' || d.deal_status === 'betaald'))
-    .reduce((s, d) => s + (d.commissie_closer ?? 0) + (d.commissie_setter ?? 0) + (d.commissie_manager ?? 0), 0)
+  const openCommissies = allDeals
+    .filter(d => !d.commissie_betaald && (d.deal_status === 'gesloten' || d.deal_status === 'betaald' || d.deal_status === 'opgeleverd'))
+    .reduce((s, d) => s + (d.commissie_closer ?? 0) + (d.commissie_setter ?? 0) + (d.commissie_creator ?? 0) + (d.commissie_manager ?? 0) + (d.commissie_web_developer ?? 0), 0)
 
   // Leads per setter chart
   const setterMap: Record<string, number> = {}

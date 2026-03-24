@@ -17,6 +17,7 @@ const navItems: NavItem[] = [
   { href: '/leads', icon: '👥', label: 'Leads', roles: ['founder', 'sales_manager', 'setter'] },
   { href: '/outreach', icon: '📞', label: 'Outreach', roles: ['founder', 'sales_manager', 'outreacher'] },
   { href: '/pipeline', icon: '💼', label: 'Pipeline', roles: ['founder', 'sales_manager', 'closer'] },
+  { href: '/deals', icon: '📁', label: 'Deals', roles: ['founder', 'sales_manager', 'closer', 'web_developer', 'head_of_tech'] },
   { href: '/marktdata', icon: '📊', label: 'Marktdata', roles: ['founder', 'sales_manager', 'setter', 'outreacher'] },
   { href: '/dagrapporten', icon: '📋', label: 'Dagrapporten', roles: ['founder', 'sales_manager', 'setter', 'outreacher', 'closer'] },
   { href: '/leaderboard', icon: '🏆', label: 'Leaderboard', roles: ['founder', 'sales_manager'] },
