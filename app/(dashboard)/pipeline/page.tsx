@@ -143,8 +143,9 @@ export default function PipelinePage() {
       body: JSON.stringify({ table: 'deals', id })
     })
     if (!res.ok) {
+      const data = await res.json()
       fetchDeals()
-      alert('Verwijderen mislukt')
+      alert('Verwijderen mislukt: ' + (data.error || 'onbekende fout'))
     }
   }
 

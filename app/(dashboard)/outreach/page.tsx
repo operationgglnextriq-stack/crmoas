@@ -45,7 +45,11 @@ export default function OutreachPage() {
   })
 
   const handleDelete = async (item: OutreachLead) => {
-    await supabase.from('outreach_leads').delete().eq('id', item.id)
+    const { error } = await supabase.from('outreach_leads').delete().eq('id', item.id)
+    if (error) {
+      alert('Verwijderen mislukt: ' + error.message)
+      return
+    }
     setItems(prev => prev.filter(i => i.id !== item.id))
   }
 

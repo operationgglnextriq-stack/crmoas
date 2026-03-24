@@ -68,6 +68,12 @@ export async function DELETE(request: NextRequest) {
   if (!table || !id || !ALLOWED.includes(table)) return NextResponse.json({ error: 'Ongeldig' }, { status: 400 })
 
   const admin = await createAdminClient()
+
+  // Cascade: als we een lead verwijderen, ontkoppel eerst de deals
+  if (table === 'leads') {
+    await (admin.from('deals' as any) as any).update({ lead_id: null }).eq('lead_id', id)
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (admin.from(table as any) as any).delete().eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
