@@ -25,6 +25,7 @@ export default function DagraportenPage() {
   })
 
   const isManager = teamMember?.rol === 'founder' || teamMember?.rol === 'sales_manager'
+  const [filterDatum, setFilterDatum] = useState('')
 
   const fetchData = async () => {
     const res = await apiFetch('/api/crud?table=dagrapporten')
@@ -82,7 +83,14 @@ export default function DagraportenPage() {
 
   if (loading) return <LoadingSpinner />
 
-  const zichtbaar = isManager ? rapporten : rapporten.filter(r => r.naam === teamMember?.naam)
+  const vandaag = format(new Date(), 'yyyy-MM-dd')
+  const vandaagRapporten = rapporten.filter(r => r.rapport_datum === vandaag)
+  const totaalLeads = vandaagRapporten.reduce((s, r) => s + (r.leads_benaderd ?? 0), 0)
+  const totaalCalls = vandaagRapporten.reduce((s, r) => s + (r.calls_geboekt ?? 0), 0)
+  const totaalFollowups = vandaagRapporten.reduce((s, r) => s + (r.volle_ups ?? 0), 0)
+  const zichtbaar = isManager
+    ? rapporten.filter(r => !filterDatum || r.rapport_datum === filterDatum)
+    : rapporten.filter(r => r.naam === teamMember?.naam)
 
   return (
     <div className="space-y-6">
@@ -92,6 +100,9 @@ export default function DagraportenPage() {
           <button onClick={copyLink} className="text-sm px-3 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">
             {copied ? '✅ Gekopieerd!' : '🔗 Link kopiëren'}
           </button>
+        {isManager && (
+          <input type="date" className="input !w-auto text-sm" value={filterDatum} onChange={e => setFilterDatum(e.target.value)} />
+        )}
           <button onClick={openNieuw} className="btn-primary">+ Dagrapport indienen</button>
         </div>
       </div>

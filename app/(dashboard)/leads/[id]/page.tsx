@@ -9,6 +9,7 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import Modal, { ConfirmModal } from '@/components/ui/Modal'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/context/AuthContext'
 import { format } from 'date-fns'
 import { nl } from 'date-fns/locale'
 
@@ -20,6 +21,39 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState<Partial<Lead>>({})
   const router = useRouter()
+  const { teamMember } = useAuth()
+  const [doorSturing, setDoorSturing] = useState(false)
+  const [doorSturenSuccess, setDoorSturenSuccess] = useState(false)
+
+  const canDoorSturen = teamMember && !['outreacher', 'ambassadeur', 'creator'].includes(teamMember.rol)
+
+  const handleDoorSturen = async () => {
+    if (!lead || !teamMember) return
+    setDoorSturing(true)
+    const res = await apiFetch('/api/crud', {
+      method: 'POST',
+      body: JSON.stringify({
+        table: 'deals',
+        data: {
+          bedrijfsnaam: lead.bedrijfsnaam,
+          lead_id: lead.id,
+          deal_status: 'call',
+          setter_naam: teamMember.naam,
+          closer_naam: lead.closer_naam ?? null,
+          betaling_ontvangen: false,
+          commissie_betaald: false,
+          recurring: false,
+        }
+      })
+    })
+    setDoorSturing(false)
+    if (res.ok) {
+      setDoorSturenSuccess(true)
+      setTimeout(() => setDoorSturenSuccess(false), 3000)
+    } else {
+      alert('Mislukt — deal kon niet aangemaakt worden')
+    }
+  }
 
   const fetchLead = async () => {
     const res = await apiFetch(`/api/crud?table=leads&id=${params.id}`)
@@ -69,6 +103,18 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
         <div className="ml-auto flex gap-2">
           <button onClick={() => setShowEdit(true)} className="btn-primary text-sm">✏️ Bewerken</button>
           <button onClick={() => setShowDelete(true)} className="text-sm px-3 py-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100">🗑️ Verwijderen</button>
+          {canDoorSturen && (
+            <button
+              onClick={handleDoorSturen}
+              disabled={doorSturing}
+              className="text-sm px-3 py-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 disabled:opacity-50"
+            >
+              {doorSturing ? 'Bezig...' : '📤 Naar pipeline'}
+            </button>
+          )}
+          {doorSturenSuccess && (
+            <span className="text-sm text-green-600 font-medium">✅ Deal aangemaakt!</span>
+          )}
         </div>
       </div>
 
