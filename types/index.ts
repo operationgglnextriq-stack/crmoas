@@ -106,6 +106,7 @@ export interface Deal {
   upsell_hosting: boolean
   scan_check: boolean
   recurring: boolean
+  recurring_maand_bedrag: number | null
   notities: string | null
 }
 

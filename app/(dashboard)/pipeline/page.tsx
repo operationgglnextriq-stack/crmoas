@@ -263,6 +263,31 @@ export default function PipelinePage() {
               </label>
             </div>
           )}
+          {/* Recurring */}
+          <div className="col-span-2 flex flex-col gap-2 pt-2 border-t">
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={form.recurring ?? false}
+                  onChange={e => setForm(f => ({...f, recurring: e.target.checked}))}
+                  className="w-4 h-4 accent-[#6B3FA0]" />
+                <span className="text-sm font-medium text-gray-700">Recurring deal (terugkerende omzet)</span>
+              </label>
+            </div>
+            {form.recurring && (
+              <div className="grid grid-cols-2 gap-4 pl-6">
+                <div>
+                  <label className="label">Maandbedrag recurring (€)</label>
+                  <input type="number" className="input"
+                    placeholder="bijv. 150"
+                    value={form.recurring_maand_bedrag ?? ''}
+                    onChange={e => setForm(f => ({...f, recurring_maand_bedrag: Number(e.target.value) || null}))} />
+                </div>
+                <div className="flex items-end pb-2">
+                  <p className="text-xs text-gray-400">Commissies worden berekend over dit maandbedrag</p>
+                </div>
+              </div>
+            )}
+          </div>
           <div><label className="label">Notities</label>
             <textarea className="input" rows={2} value={form.notities ?? ''} onChange={e => setForm(f => ({...f, notities: e.target.value}))} /></div>
           <div className="flex gap-3 justify-end pt-2 border-t">

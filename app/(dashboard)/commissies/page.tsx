@@ -130,6 +130,41 @@ export default function CommissiesPage() {
     !d.closer_naam && !d.setter_naam && !d.creator_naam
   )
 
+  // Recurring commissies
+  const PRODUCT_LABELS_SHORT: Record<string, string> = {
+    hosting: 'Hosting', ai_agency: 'AI Agency', comm_klant: 'Comm. Klant',
+    comm_extern: 'Comm. Extern', website_std: 'Website', website_maat: 'Maatwerk',
+  }
+  const recurringFilter = deals.filter(d => d.recurring && ['gesloten', 'betaald', 'opgeleverd'].includes(d.deal_status))
+  const recurringDeals: Array<{ deal: Deal; rol: string; maandbedrag: number; commissieMaand: number; product: string }> = []
+
+  for (const deal of recurringFilter) {
+    const maandbedrag = deal.recurring_maand_bedrag || Math.round((deal.deal_waarde ?? 0) / 12)
+    const product = PRODUCT_LABELS_SHORT[deal.product ?? ''] ?? deal.product ?? '-'
+
+    const addEntry = (lidNaam: string | null, opgeslagenComm: number | null, rol: string) => {
+      if (!lidNaam) return
+      if (filterNaam && lidNaam !== filterNaam) return
+      const lid = leden.find(l => l.naam === lidNaam)
+      const pct = lid ? lid.commissie_pct / 100 : 0
+      const commissieMaand = opgeslagenComm && opgeslagenComm > 0
+        ? Math.round(opgeslagenComm / 12)
+        : Math.round(maandbedrag * pct)
+      if (commissieMaand > 0) recurringDeals.push({ deal, rol, maandbedrag, commissieMaand, product })
+    }
+
+    addEntry(deal.setter_naam, deal.commissie_setter, 'Setter')
+    addEntry(deal.closer_naam, deal.commissie_closer, 'Closer')
+    addEntry(deal.creator_naam, deal.commissie_creator, 'Creator')
+    const sm = leden.find(l => l.rol === 'sales_manager')
+    if (sm && (!filterNaam || sm.naam === filterNaam)) {
+      const smComm = Math.round(maandbedrag * 0.05)
+      if (smComm > 0) recurringDeals.push({ deal, rol: 'Sales Manager', maandbedrag, commissieMaand: smComm, product })
+    }
+  }
+
+  const totalRecurringMaand = recurringDeals.reduce((s, r) => s + r.commissieMaand, 0)
+
   const handleUitbetalen = async (dealId: string) => {
     await apiFetch('/api/crud', {
       method: 'PATCH',
@@ -159,7 +194,7 @@ export default function CommissiesPage() {
       </div>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <div className="card !p-5 border-l-4 border-l-orange-400">
           <p className="text-xs text-gray-500 mb-1">Openstaand</p>
           <p className="text-2xl font-bold text-orange-600">€{totaalOpen.toLocaleString('nl-NL')}</p>
@@ -169,6 +204,11 @@ export default function CommissiesPage() {
           <p className="text-xs text-gray-500 mb-1">Uitbetaald</p>
           <p className="text-2xl font-bold text-green-600">€{totaalBetaald.toLocaleString('nl-NL')}</p>
           <p className="text-xs text-gray-400 mt-1">Totaal ontvangen</p>
+        </div>
+        <div className="card !p-5 border-l-4 border-l-purple-500">
+          <p className="text-xs text-gray-500 mb-1">Recurring /maand</p>
+          <p className="text-2xl font-bold text-purple-600">€{totalRecurringMaand.toLocaleString('nl-NL')}</p>
+          <p className="text-xs text-gray-400 mt-1">Vaste terugkerende commissie</p>
         </div>
       </div>
 
@@ -326,6 +366,46 @@ export default function CommissiesPage() {
           </div>
         </div>
       )}
+
+      {/* Recurring commissies sectie */}
+      <div className="card !p-0 overflow-hidden">
+        <div className="px-4 py-3 bg-purple-50 border-b border-purple-100 flex items-center gap-2">
+          <span>🔄</span>
+          <h3 className="font-semibold text-purple-800">Recurring Commissies — Maandoverzicht</h3>
+          <span className="ml-auto text-sm text-purple-600 font-medium">
+            Totaal/maand: €{totalRecurringMaand.toLocaleString('nl-NL')}
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50 border-b">
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Bedrijf</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Product</th>
+                <th className="text-right px-4 py-3 font-semibold text-gray-700">Maandbedrag</th>
+                <th className="text-right px-4 py-3 font-semibold text-purple-700">Commissie/maand</th>
+                <th className="text-right px-4 py-3 font-semibold text-gray-500">Jaarlijks</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Rol</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recurringDeals.map((item, i) => (
+                <tr key={item.deal.id + item.rol} className={`border-b border-gray-100 ${i % 2 === 1 ? 'bg-gray-50/50' : ''}`}>
+                  <td className="px-4 py-3 font-medium text-[#1B2A4A]">{item.deal.bedrijfsnaam}</td>
+                  <td className="px-4 py-3 text-gray-500 text-xs">{item.product}</td>
+                  <td className="px-4 py-3 text-right">€{item.maandbedrag.toLocaleString('nl-NL')}</td>
+                  <td className="px-4 py-3 text-right font-bold text-purple-700">€{item.commissieMaand.toLocaleString('nl-NL')}</td>
+                  <td className="px-4 py-3 text-right text-gray-500">€{(item.commissieMaand * 12).toLocaleString('nl-NL')}</td>
+                  <td className="px-4 py-3"><span className="badge bg-purple-100 text-purple-700">{item.rol}</span></td>
+                </tr>
+              ))}
+              {recurringDeals.length === 0 && (
+                <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">Geen recurring deals</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       {(selectedLid || !isManager) && (
         <div className="card !p-0 overflow-hidden">
