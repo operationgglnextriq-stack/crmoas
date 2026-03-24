@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { apiFetch } from '@/lib/apiFetch'
-import { Dagrapport } from '@/types'
+import { Dagrapport, TeamMember } from '@/types'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import Modal, { ConfirmModal } from '@/components/ui/Modal'
 import { format } from 'date-fns'
@@ -26,8 +26,13 @@ export default function DagraportenPage() {
 
   const isManager = teamMember?.rol === 'founder' || teamMember?.rol === 'sales_manager'
   const [filterDatum, setFilterDatum] = useState('')
+  const [leden, setLeden] = useState<TeamMember[]>([])
 
   const fetchData = async () => {
+    const ledenRes = await apiFetch('/api/crud?table=team_members')
+    const ledenData = await ledenRes.json()
+    setLeden(Array.isArray(ledenData) ? ledenData.filter((l: TeamMember) => l.actief && ['setter','closer','outreacher'].includes(l.rol)) : [])
+
     const res = await apiFetch('/api/crud?table=dagrapporten')
     const data = await res.json()
     setRapporten(Array.isArray(data) ? data.sort((a: Dagrapport, b: Dagrapport) =>
