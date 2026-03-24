@@ -10,14 +10,14 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner'
 const ROL_LABELS: Record<Rol, string> = {
   founder: 'Founder', sales_manager: 'Sales Manager', setter: 'Appointment Setter',
   outreacher: 'Cold Outreacher', closer: 'Closer', creator: 'Creator', ambassadeur: 'Ambassadeur',
-  web_developer: 'Web Developer',
+  web_developer: 'Web Developer', head_of_tech: 'Head of Tech', ai_engineer: 'AI Engineer',
 }
 const ROL_COLORS: Record<Rol, string> = {
   founder: 'bg-purple-100 text-purple-800', sales_manager: 'bg-blue-100 text-blue-800',
   setter: 'bg-green-100 text-green-800', outreacher: 'bg-orange-100 text-orange-800',
   closer: 'bg-red-100 text-red-800', creator: 'bg-pink-100 text-pink-800',
-  ambassadeur: 'bg-teal-100 text-teal-800',
-  web_developer: 'bg-indigo-100 text-indigo-800',
+  ambassadeur: 'bg-teal-100 text-teal-800', web_developer: 'bg-indigo-100 text-indigo-800',
+  head_of_tech: 'bg-cyan-100 text-cyan-800', ai_engineer: 'bg-emerald-100 text-emerald-800',
 }
 
 interface AuthUser { id: string; email: string }
@@ -27,7 +27,7 @@ export default function TeamPage() {
   const [leden, setLeden] = useState<TeamMember[]>([])
   const [authUsers, setAuthUsers] = useState<AuthUser[]>([])
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'sales' | 'outreach'>('sales')
+  const [tab, setTab] = useState<'sales' | 'outreach' | 'tech'>('sales')
   const [showModal, setShowModal] = useState(false)
   const [editTarget, setEditTarget] = useState<TeamMember | null>(null)
   const [deactiveerTarget, setDeactiveerTarget] = useState<TeamMember | null>(null)
@@ -64,7 +64,8 @@ export default function TeamPage() {
 
   const salesTeam = leden.filter(l => ['setter','closer','creator','ambassadeur','sales_manager','founder'].includes(l.rol))
   const outreachTeam = leden.filter(l => l.rol === 'outreacher')
-  const displayTeam = tab === 'sales' ? salesTeam : outreachTeam
+  const techTeam = leden.filter(l => ['web_developer','head_of_tech','ai_engineer'].includes(l.rol))
+  const displayTeam = tab === 'sales' ? salesTeam : tab === 'outreach' ? outreachTeam : techTeam
 
   const openNieuw = () => {
     setEditTarget(null)
@@ -172,10 +173,10 @@ export default function TeamPage() {
   return (
     <div className="space-y-6">
       <div className="flex gap-4 border-b border-gray-200">
-        {(['sales', 'outreach'] as const).map(t => (
+        {(['sales', 'outreach', 'tech'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${tab === t ? 'border-[#6B3FA0] text-[#6B3FA0]' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
-            {t === 'sales' ? '💼 Sales Team' : '📞 Outreach Team'}
+            {t === 'sales' ? '💼 Sales Team' : t === 'outreach' ? '📞 Outreach Team' : '💻 Tech Team'}
           </button>
         ))}
         <div className="ml-auto pb-2">
