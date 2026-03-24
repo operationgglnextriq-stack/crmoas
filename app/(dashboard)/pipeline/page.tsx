@@ -44,7 +44,7 @@ export default function PipelinePage() {
   const [showViewModal, setShowViewModal] = useState(false)
 
   const isManager = teamMember?.rol === 'founder' || teamMember?.rol === 'sales_manager'
-  const isCloser = teamMember?.rol === 'closer'
+  const isCloser = teamMember?.rol === 'closer' || teamMember?.rol === 'web_developer' || teamMember?.rol === 'head_of_tech'
   const isSetter = teamMember?.rol === 'setter'
   const isTech = ['web_developer', 'head_of_tech', 'ai_engineer'].includes(teamMember?.rol ?? '')
   const canCreate = isManager || isCloser
@@ -183,7 +183,7 @@ export default function PipelinePage() {
   const totalPipeline = zichtbareDeals.filter(d => !['verloren','opgeleverd'].includes(d.deal_status))
     .reduce((s, d) => s + (d.deal_waarde ?? 0), 0)
 
-  const closers = leden.filter(l => ['closer','sales_manager','founder'].includes(l.rol))
+  const closers = leden.filter(l => ['closer','sales_manager','founder','web_developer','head_of_tech'].includes(l.rol))
   const setters = leden.filter(l => ['setter','sales_manager','founder'].includes(l.rol))
   const creators = leden.filter(l => l.rol === 'creator')
   const ambassadeurs = leden.filter(l => l.rol === 'ambassadeur')
