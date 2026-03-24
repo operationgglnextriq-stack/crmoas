@@ -15,6 +15,13 @@ export default function CommissiesPage() {
 
   const isManager = teamMember?.rol === 'founder' || teamMember?.rol === 'sales_manager'
 
+  const ROL_LABELS: Record<string, string> = {
+    founder: 'Founder', sales_manager: 'Team Manager', setter: 'Appointment Setter',
+    outreacher: 'Cold Outreacher', closer: 'Closer', creator: 'Creator',
+    ambassadeur: 'Ambassadeur', web_developer: 'Web Developer',
+    head_of_tech: 'Head of Tech', ai_engineer: 'AI Engineer',
+  }
+
   const fetchAll = useCallback(async () => {
     const [dealsRes, ledenRes] = await Promise.all([
       apiFetch('/api/crud?table=deals'),
@@ -114,10 +121,13 @@ export default function CommissiesPage() {
       d.closer_naam === lid.naam || d.setter_naam === lid.naam ||
       d.creator_naam === lid.naam || d.ambassadeur_naam === lid.naam
     )
-    const managerCommOpen = lid.rol === 'sales_manager'
+    // Alleen de hoofd sales_manager (eerste actieve) ontvangt commissie_manager
+    const hoofdManager = leden.find(l => l.rol === 'sales_manager' && l.actief)
+    const isHoofdManager = lid.rol === 'sales_manager' && hoofdManager?.id === lid.id
+    const managerCommOpen = isHoofdManager
       ? gesloten.filter(d => !d.commissie_betaald).reduce((s, d) => s + (d.commissie_manager ?? 0), 0)
       : 0
-    const managerCommBetaald = lid.rol === 'sales_manager'
+    const managerCommBetaald = isHoofdManager
       ? gesloten.filter(d => d.commissie_betaald).reduce((s, d) => s + (d.commissie_manager ?? 0), 0)
       : 0
     const open = lidDeals.filter(d => !d.commissie_betaald).reduce((s, d) => s + getCommissie(d, lid.naam), 0) + managerCommOpen
@@ -257,7 +267,7 @@ export default function CommissiesPage() {
                       onClick={() => setSelectedLid(r.lid.naam)}
                     >
                       <td className="px-4 py-3 font-medium text-[#1B2A4A]">{r.lid.naam}</td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">{r.lid.rol}</td>
+                      <td className="px-4 py-3 text-gray-500 text-xs">{ROL_LABELS[r.lid.rol] ?? r.lid.rol}</td>
                       <td className="px-4 py-3 text-right">{r.deals}</td>
                       <td className="px-4 py-3 text-right font-semibold text-orange-600">€{r.open.toLocaleString('nl-NL')}</td>
                       <td className="px-4 py-3 text-right font-semibold text-green-600">€{r.betaald.toLocaleString('nl-NL')}</td>
