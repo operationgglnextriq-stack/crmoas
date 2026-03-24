@@ -60,6 +60,10 @@ export default function TodoPage() {
   const [filterStatus, setFilterStatus] = useState<TodoStatus | 'alle'>('alle')
   const [filterPrioriteit, setFilterPrioriteit] = useState<Prioriteit | 'alle'>('alle')
   const [showModal, setShowModal] = useState(false)
+  const [editTodo, setEditTodo] = useState<Todo | null>(null)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editForm, setEditForm] = useState<Partial<Todo>>({})
+  const [editSaving, setEditSaving] = useState(false)
   const [form, setForm] = useState(leegForm)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -107,6 +111,46 @@ export default function TodoPage() {
     if (res.ok) {
       setTodos(prev => prev.filter(t => t.id !== id))
     }
+  }
+
+  function openEdit(todo: Todo) {
+    setEditTodo(todo)
+    setEditForm({
+      titel: todo.titel,
+      omschrijving: todo.omschrijving ?? '',
+      prioriteit: todo.prioriteit,
+      toegewezen_aan: todo.toegewezen_aan ?? '',
+      deadline: todo.deadline ?? '',
+      afdeling: todo.afdeling ?? '',
+    })
+    setShowEditModal(true)
+  }
+
+  async function handleEditSave() {
+    if (!editTodo) return
+    setEditSaving(true)
+    const res = await fetch('/api/todos', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: editTodo.id,
+        data: {
+          titel: editForm.titel,
+          omschrijving: editForm.omschrijving || null,
+          prioriteit: editForm.prioriteit,
+          toegewezen_aan: editForm.toegewezen_aan || null,
+          deadline: editForm.deadline || null,
+          afdeling: editForm.afdeling || null,
+        }
+      }),
+    })
+    if (res.ok) {
+      const updated = await res.json()
+      setTodos(prev => prev.map(t => t.id === editTodo.id ? updated : t))
+      setShowEditModal(false)
+      setEditTodo(null)
+    }
+    setEditSaving(false)
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -299,6 +343,12 @@ export default function TodoPage() {
                     ↩ Heropenen
                   </button>
                 )}
+                <button
+                  onClick={() => openEdit(todo)}
+                  className="text-xs py-1.5 px-3 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
+                >
+                  ✏️
+                </button>
                 {isManager && (
                   <button
                     onClick={() => handleDelete(todo.id)}
@@ -401,6 +451,82 @@ export default function TodoPage() {
             </button>
           </div>
         </form>
+      </Modal>
+      {/* Bewerk Modal */}
+      <Modal open={showEditModal} onClose={() => setShowEditModal(false)} title="Taak bewerken">
+        <div className="space-y-4">
+          <div>
+            <label className="label">Titel *</label>
+            <input
+              type="text"
+              className="input"
+              value={editForm.titel ?? ''}
+              onChange={e => setEditForm(f => ({ ...f, titel: e.target.value }))}
+            />
+          </div>
+          <div>
+            <label className="label">Omschrijving / Notities</label>
+            <textarea
+              className="input"
+              rows={4}
+              value={editForm.omschrijving ?? ''}
+              onChange={e => setEditForm(f => ({ ...f, omschrijving: e.target.value }))}
+              placeholder="Voeg notities of extra details toe..."
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="label">Prioriteit</label>
+              <select
+                className="input"
+                value={editForm.prioriteit ?? 'normaal'}
+                onChange={e => setEditForm(f => ({ ...f, prioriteit: e.target.value as Prioriteit }))}
+              >
+                <option value="laag">Laag</option>
+                <option value="normaal">Normaal</option>
+                <option value="hoog">Hoog</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+            <div>
+              <label className="label">Deadline</label>
+              <input
+                type="date"
+                className="input"
+                value={editForm.deadline ?? ''}
+                onChange={e => setEditForm(f => ({ ...f, deadline: e.target.value }))}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="label">Toegewezen aan</label>
+              <input
+                type="text"
+                className="input"
+                value={editForm.toegewezen_aan ?? ''}
+                onChange={e => setEditForm(f => ({ ...f, toegewezen_aan: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="label">Afdeling</label>
+              <input
+                type="text"
+                className="input"
+                value={editForm.afdeling ?? ''}
+                onChange={e => setEditForm(f => ({ ...f, afdeling: e.target.value }))}
+              />
+            </div>
+          </div>
+          <div className="flex gap-3 pt-2 border-t">
+            <button type="button" onClick={() => setShowEditModal(false)} className="btn-secondary flex-1">
+              Annuleren
+            </button>
+            <button onClick={handleEditSave} disabled={editSaving} className="btn-primary flex-1 disabled:opacity-50">
+              {editSaving ? 'Opslaan...' : 'Wijzigingen opslaan'}
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   )
