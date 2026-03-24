@@ -104,6 +104,18 @@ export default function PipelinePage() {
 
   const handleSave = async () => {
     setSaving(true)
+
+    // Auto-bereken commissies
+    const setter = leden.find(l => l.naam === form.setter_naam)
+    const closer = leden.find(l => l.naam === form.closer_naam)
+    const creator = leden.find(l => l.naam === form.creator_naam)
+    const waarde = form.deal_waarde ?? 0
+    const isWebsite = ['website_std', 'website_maat', 'hosting'].includes(form.product ?? '')
+    form.commissie_setter = setter ? Math.round(waarde * (setter.commissie_pct / 100)) : (form.commissie_setter ?? 0)
+    form.commissie_closer = closer ? Math.round(waarde * (closer.commissie_pct / 100)) : (form.commissie_closer ?? 0)
+    form.commissie_creator = creator ? Math.round(waarde * (creator.commissie_pct / 100)) : (form.commissie_creator ?? 0)
+    form.commissie_web_developer = isWebsite ? Math.round(waarde * 0.25) : 0
+
     if (editDeal) {
       await fetch('/api/crud', {
         method: 'PATCH',
@@ -124,12 +136,16 @@ export default function PipelinePage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Deal verwijderen?')) return
-    await fetch('/api/crud', {
+    setDeals(prev => prev.filter(d => d.id !== id))
+    const res = await fetch('/api/crud', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ table: 'deals', id })
     })
-    fetchDeals()
+    if (!res.ok) {
+      fetchDeals()
+      alert('Verwijderen mislukt')
+    }
   }
 
   if (loading) return <LoadingSpinner />

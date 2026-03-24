@@ -61,11 +61,16 @@ export default function DagraportenPage() {
   }
 
   const handleDelete = async (id: string) => {
-    await fetch('/api/crud', {
+    const res = await fetch('/api/crud', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ table: 'dagrapporten', id })
     })
+    const data = await res.json()
+    if (!res.ok) {
+      alert('Verwijderen mislukt: ' + (data.error || 'onbekende fout'))
+      return
+    }
     setDeleteTarget(null)
     fetchData()
   }

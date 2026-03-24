@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/navigation'
+import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import Modal from '@/components/ui/Modal'
 
 type Prioriteit = 'laag' | 'normaal' | 'hoog' | 'urgent'
 type TodoStatus = 'open' | 'bezig' | 'gedaan'
@@ -22,17 +24,17 @@ interface Todo {
 
 const TOEGESTANE_ROLLEN = ['founder', 'sales_manager', 'web_developer', 'head_of_tech']
 
-const prioriteitKleur: Record<Prioriteit, string> = {
-  laag: 'bg-gray-500/20 text-gray-300 border border-gray-500/30',
-  normaal: 'bg-blue-500/20 text-blue-300 border border-blue-500/30',
-  hoog: 'bg-orange-500/20 text-orange-300 border border-orange-500/30',
-  urgent: 'bg-red-500/20 text-red-300 border border-red-500/30',
+const prioriteitBadge: Record<Prioriteit, string> = {
+  laag: 'bg-gray-100 text-gray-600',
+  normaal: 'bg-blue-100 text-blue-700',
+  hoog: 'bg-orange-100 text-orange-700',
+  urgent: 'bg-red-100 text-red-700',
 }
 
-const statusKleur: Record<TodoStatus, string> = {
-  open: 'bg-slate-500/20 text-slate-300 border border-slate-500/30',
-  bezig: 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30',
-  gedaan: 'bg-green-500/20 text-green-300 border border-green-500/30',
+const statusBadge: Record<TodoStatus, string> = {
+  open: 'bg-slate-100 text-slate-600',
+  bezig: 'bg-yellow-100 text-yellow-700',
+  gedaan: 'bg-green-100 text-green-700',
 }
 
 const volgendeStatus: Record<TodoStatus, TodoStatus> = {
@@ -62,6 +64,8 @@ export default function TodoPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
+  const isManager = teamMember?.rol === 'founder' || teamMember?.rol === 'sales_manager'
+
   useEffect(() => {
     if (!loading && teamMember) {
       if (!TOEGESTANE_ROLLEN.includes(teamMember.rol)) {
@@ -70,9 +74,7 @@ export default function TodoPage() {
     }
   }, [loading, teamMember, router])
 
-  useEffect(() => {
-    fetchTodos()
-  }, [])
+  useEffect(() => { fetchTodos() }, [])
 
   async function fetchTodos() {
     setLoadingTodos(true)
@@ -84,8 +86,7 @@ export default function TodoPage() {
     setLoadingTodos(false)
   }
 
-  async function handleStatusChange(todo: Todo) {
-    const nieuweStatus = volgendeStatus[todo.status]
+  async function handleStatusChange(todo: Todo, nieuweStatus: TodoStatus) {
     const res = await fetch('/api/todos', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -147,98 +148,110 @@ export default function TodoPage() {
     return true
   })
 
-  if (loading || !teamMember) return null
+  const aantalOpen = todos.filter(t => t.status === 'open').length
+  const aantalBezig = todos.filter(t => t.status === 'bezig').length
+  const aantalGedaan = todos.filter(t => t.status === 'gedaan').length
+
+  if (loading || !teamMember) return <LoadingSpinner />
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-white">📋 Todo List</h1>
-          <p className="text-white/50 text-sm mt-1">{todos.length} taken totaal</p>
-        </div>
-        <button
-          onClick={() => { setShowModal(true); setError('') }}
-          className="bg-[#6B3FA0] hover:bg-[#7d4fba] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-        >
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h2 className="text-lg font-bold text-[#1B2A4A]">📋 Todo List</h2>
+        <button onClick={() => { setShowModal(true); setError('') }} className="btn-primary">
           + Nieuwe taak
         </button>
       </div>
 
+      {/* Statistieken */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="card text-center">
+          <p className="text-2xl font-bold text-slate-700">{aantalOpen}</p>
+          <p className="text-sm text-gray-500 mt-1">Open taken</p>
+        </div>
+        <div className="card text-center">
+          <p className="text-2xl font-bold text-yellow-600">{aantalBezig}</p>
+          <p className="text-sm text-gray-500 mt-1">Bezig</p>
+        </div>
+        <div className="card text-center">
+          <p className="text-2xl font-bold text-green-600">{aantalGedaan}</p>
+          <p className="text-sm text-gray-500 mt-1">Gedaan</p>
+        </div>
+      </div>
+
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-6">
-        <div className="flex gap-1 bg-white/5 rounded-lg p-1">
+      <div className="flex flex-wrap gap-3">
+        {/* Status filter */}
+        <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
           {(['alle', 'open', 'bezig', 'gedaan'] as const).map(s => (
             <button
               key={s}
               onClick={() => setFilterStatus(s)}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors capitalize ${
-                filterStatus === s ? 'bg-[#6B3FA0] text-white' : 'text-white/60 hover:text-white'
+                filterStatus === s
+                  ? 'bg-[#6B3FA0] text-white shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
               }`}
             >
-              {s === 'alle' ? 'Alle statussen' : s}
+              {s === 'alle' ? 'Alle' : s}
             </button>
           ))}
         </div>
-        <div className="flex gap-1 bg-white/5 rounded-lg p-1">
-          {(['alle', 'laag', 'normaal', 'hoog', 'urgent'] as const).map(p => (
-            <button
-              key={p}
-              onClick={() => setFilterPrioriteit(p)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors capitalize ${
-                filterPrioriteit === p ? 'bg-[#6B3FA0] text-white' : 'text-white/60 hover:text-white'
-              }`}
-            >
-              {p === 'alle' ? 'Alle prioriteiten' : p}
-            </button>
-          ))}
-        </div>
+        {/* Prioriteit dropdown */}
+        <select
+          value={filterPrioriteit}
+          onChange={e => setFilterPrioriteit(e.target.value as Prioriteit | 'alle')}
+          className="input text-sm py-1.5 w-auto"
+        >
+          <option value="alle">Alle prioriteiten</option>
+          <option value="laag">Laag</option>
+          <option value="normaal">Normaal</option>
+          <option value="hoog">Hoog</option>
+          <option value="urgent">Urgent</option>
+        </select>
       </div>
 
-      {/* Todo grid */}
+      {/* Todo kaarten */}
       {loadingTodos ? (
-        <div className="text-white/50 text-center py-12">Laden...</div>
+        <LoadingSpinner />
       ) : gefilterd.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="text-4xl mb-3">✅</p>
-          <p className="text-white/50">Geen taken gevonden</p>
+        <div className="card text-center py-12 text-gray-400">
+          <p className="text-3xl mb-2">✅</p>
+          <p>Geen taken gevonden</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {gefilterd.map(todo => (
             <div
               key={todo.id}
-              className={`bg-white/5 border rounded-xl p-4 flex flex-col gap-3 transition-all hover:bg-white/8 ${
-                todo.status === 'gedaan' ? 'border-green-500/20 opacity-75' : 'border-white/10'
-              }`}
+              className={`card flex flex-col gap-3 ${todo.status === 'gedaan' ? 'opacity-70' : ''}`}
             >
               {/* Badges */}
               <div className="flex items-center gap-2 flex-wrap">
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${prioriteitKleur[todo.prioriteit]}`}>
+                <span className={`badge capitalize ${prioriteitBadge[todo.prioriteit]}`}>
                   {todo.prioriteit}
                 </span>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${statusKleur[todo.status]}`}>
+                <span className={`badge capitalize ${statusBadge[todo.status]}`}>
                   {todo.status}
                 </span>
                 {todo.afdeling && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                    {todo.afdeling}
-                  </span>
+                  <span className="badge bg-purple-100 text-purple-700">{todo.afdeling}</span>
                 )}
               </div>
 
-              {/* Titel */}
+              {/* Titel + omschrijving */}
               <div>
-                <h3 className={`font-semibold text-white text-sm leading-snug ${todo.status === 'gedaan' ? 'line-through opacity-60' : ''}`}>
+                <h3 className={`font-bold text-[#1B2A4A] text-sm leading-snug ${todo.status === 'gedaan' ? 'line-through text-gray-400' : ''}`}>
                   {todo.titel}
                 </h3>
                 {todo.omschrijving && (
-                  <p className="text-white/50 text-xs mt-1 leading-relaxed">{todo.omschrijving}</p>
+                  <p className="text-gray-500 text-xs mt-1 leading-relaxed">{todo.omschrijving}</p>
                 )}
               </div>
 
-              {/* Meta */}
-              <div className="text-xs text-white/40 space-y-1 mt-auto">
+              {/* Footer meta */}
+              <div className="text-xs text-gray-400 space-y-1 mt-auto pt-2 border-t border-gray-100">
                 {todo.toegewezen_aan && (
                   <div className="flex items-center gap-1.5">
                     <span>👤</span>
@@ -258,19 +271,39 @@ export default function TodoPage() {
               </div>
 
               {/* Acties */}
-              <div className="flex gap-2 pt-2 border-t border-white/10">
-                <button
-                  onClick={() => handleStatusChange(todo)}
-                  className="flex-1 text-xs py-1.5 rounded-lg bg-[#6B3FA0]/30 hover:bg-[#6B3FA0]/60 text-purple-300 font-medium transition-colors"
-                >
-                  {todo.status === 'open' ? '▶ Start' : todo.status === 'bezig' ? '✓ Afronden' : '↩ Heropenen'}
-                </button>
-                <button
-                  onClick={() => handleDelete(todo.id)}
-                  className="text-xs py-1.5 px-3 rounded-lg bg-red-500/10 hover:bg-red-500/30 text-red-400 transition-colors"
-                >
-                  ✕
-                </button>
+              <div className="flex gap-2">
+                {todo.status === 'open' && (
+                  <button
+                    onClick={() => handleStatusChange(todo, 'bezig')}
+                    className="flex-1 text-xs py-1.5 rounded-lg bg-yellow-50 text-yellow-700 hover:bg-yellow-100 font-medium transition-colors"
+                  >
+                    ▶ Start
+                  </button>
+                )}
+                {todo.status === 'bezig' && (
+                  <button
+                    onClick={() => handleStatusChange(todo, 'gedaan')}
+                    className="flex-1 text-xs py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 font-medium transition-colors"
+                  >
+                    ✅ Afronden
+                  </button>
+                )}
+                {todo.status === 'gedaan' && (
+                  <button
+                    onClick={() => handleStatusChange(todo, 'open')}
+                    className="flex-1 text-xs py-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 font-medium transition-colors"
+                  >
+                    ↩ Heropenen
+                  </button>
+                )}
+                {isManager && (
+                  <button
+                    onClick={() => handleDelete(todo.id)}
+                    className="text-xs py-1.5 px-3 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition-colors"
+                  >
+                    🗑️
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -278,111 +311,94 @@ export default function TodoPage() {
       )}
 
       {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-[#1B2A4A] border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl">
-            <div className="flex items-center justify-between p-6 border-b border-white/10">
-              <h2 className="text-lg font-bold text-white">Nieuwe taak aanmaken</h2>
-              <button onClick={() => setShowModal(false)} className="text-white/40 hover:text-white transition-colors text-xl leading-none">✕</button>
+      <Modal open={showModal} onClose={() => setShowModal(false)} title="Nieuwe taak aanmaken">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-3 py-2">
+              {error}
             </div>
+          )}
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {error && (
-                <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-3 py-2">
-                  {error}
-                </div>
-              )}
-
-              <div>
-                <label className="block text-xs text-white/60 mb-1.5 font-medium">Titel *</label>
-                <input
-                  type="text"
-                  value={form.titel}
-                  onChange={e => setForm(f => ({ ...f, titel: e.target.value }))}
-                  placeholder="Wat moet er gedaan worden?"
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 focus:outline-none focus:border-[#6B3FA0]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs text-white/60 mb-1.5 font-medium">Omschrijving</label>
-                <textarea
-                  value={form.omschrijving}
-                  onChange={e => setForm(f => ({ ...f, omschrijving: e.target.value }))}
-                  placeholder="Extra details..."
-                  rows={3}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 focus:outline-none focus:border-[#6B3FA0] resize-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs text-white/60 mb-1.5 font-medium">Prioriteit</label>
-                  <select
-                    value={form.prioriteit}
-                    onChange={e => setForm(f => ({ ...f, prioriteit: e.target.value as Prioriteit }))}
-                    className="w-full bg-[#1B2A4A] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#6B3FA0]"
-                  >
-                    <option value="laag">Laag</option>
-                    <option value="normaal">Normaal</option>
-                    <option value="hoog">Hoog</option>
-                    <option value="urgent">Urgent</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs text-white/60 mb-1.5 font-medium">Deadline</label>
-                  <input
-                    type="date"
-                    value={form.deadline}
-                    onChange={e => setForm(f => ({ ...f, deadline: e.target.value }))}
-                    className="w-full bg-[#1B2A4A] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#6B3FA0]"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs text-white/60 mb-1.5 font-medium">Toegewezen aan</label>
-                  <input
-                    type="text"
-                    value={form.toegewezen_aan}
-                    onChange={e => setForm(f => ({ ...f, toegewezen_aan: e.target.value }))}
-                    placeholder="Naam teamlid"
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 focus:outline-none focus:border-[#6B3FA0]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-white/60 mb-1.5 font-medium">Afdeling</label>
-                  <input
-                    type="text"
-                    value={form.afdeling}
-                    onChange={e => setForm(f => ({ ...f, afdeling: e.target.value }))}
-                    placeholder="bijv. tech, sales"
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 focus:outline-none focus:border-[#6B3FA0]"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 py-2.5 rounded-lg border border-white/10 text-white/60 hover:text-white hover:border-white/20 text-sm transition-colors"
-                >
-                  Annuleren
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="flex-1 py-2.5 rounded-lg bg-[#6B3FA0] hover:bg-[#7d4fba] text-white text-sm font-medium transition-colors disabled:opacity-50"
-                >
-                  {saving ? 'Opslaan...' : 'Taak aanmaken'}
-                </button>
-              </div>
-            </form>
+          <div>
+            <label className="label">Titel *</label>
+            <input
+              type="text"
+              className="input"
+              value={form.titel}
+              onChange={e => setForm(f => ({ ...f, titel: e.target.value }))}
+              placeholder="Wat moet er gedaan worden?"
+            />
           </div>
-        </div>
-      )}
+
+          <div>
+            <label className="label">Omschrijving</label>
+            <textarea
+              className="input"
+              rows={3}
+              value={form.omschrijving}
+              onChange={e => setForm(f => ({ ...f, omschrijving: e.target.value }))}
+              placeholder="Extra details..."
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="label">Prioriteit</label>
+              <select
+                className="input"
+                value={form.prioriteit}
+                onChange={e => setForm(f => ({ ...f, prioriteit: e.target.value as Prioriteit }))}
+              >
+                <option value="laag">Laag</option>
+                <option value="normaal">Normaal</option>
+                <option value="hoog">Hoog</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+            <div>
+              <label className="label">Deadline</label>
+              <input
+                type="date"
+                className="input"
+                value={form.deadline}
+                onChange={e => setForm(f => ({ ...f, deadline: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="label">Toegewezen aan</label>
+              <input
+                type="text"
+                className="input"
+                value={form.toegewezen_aan}
+                onChange={e => setForm(f => ({ ...f, toegewezen_aan: e.target.value }))}
+                placeholder="Naam teamlid"
+              />
+            </div>
+            <div>
+              <label className="label">Afdeling</label>
+              <input
+                type="text"
+                className="input"
+                value={form.afdeling}
+                onChange={e => setForm(f => ({ ...f, afdeling: e.target.value }))}
+                placeholder="bijv. tech, sales"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-2 border-t">
+            <button type="button" onClick={() => setShowModal(false)} className="btn-secondary flex-1">
+              Annuleren
+            </button>
+            <button type="submit" disabled={saving} className="btn-primary flex-1 disabled:opacity-50">
+              {saving ? 'Opslaan...' : 'Taak aanmaken'}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   )
 }
