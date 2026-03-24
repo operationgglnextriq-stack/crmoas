@@ -14,6 +14,7 @@ const pageTitles: Record<string, string> = {
   '/marktdata': 'Marktdata',
   '/dagrapporten': 'Dagrapporten',
   '/leaderboard': 'Leaderboard',
+  '/todo': 'Todo List',
 }
 
 export default function Topbar({ sidebarCollapsed }: { sidebarCollapsed: boolean }) {

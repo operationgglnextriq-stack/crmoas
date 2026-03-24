@@ -166,15 +166,15 @@ export default function TodoPage() {
 
       {/* Statistieken */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="card text-center">
+        <div className="card text-center border-l-4 border-slate-400">
           <p className="text-2xl font-bold text-slate-700">{aantalOpen}</p>
           <p className="text-sm text-gray-500 mt-1">Open taken</p>
         </div>
-        <div className="card text-center">
+        <div className="card text-center border-l-4 border-yellow-400">
           <p className="text-2xl font-bold text-yellow-600">{aantalBezig}</p>
           <p className="text-sm text-gray-500 mt-1">Bezig</p>
         </div>
-        <div className="card text-center">
+        <div className="card text-center border-l-4 border-green-400">
           <p className="text-2xl font-bold text-green-600">{aantalGedaan}</p>
           <p className="text-sm text-gray-500 mt-1">Gedaan</p>
         </div>
@@ -214,10 +214,12 @@ export default function TodoPage() {
         <LoadingSpinner />
       ) : gefilterd.length === 0 ? (
         <div className="card text-center py-16">
-          <p className="text-5xl mb-4">📋</p>
-          <p className="text-lg font-semibold text-[#1B2A4A] mb-2">Geen taken gevonden</p>
-          <p className="text-sm text-gray-400 mb-6">Maak je eerste taak aan voor het management team</p>
-          <button onClick={() => { setShowModal(true); setError('') }} className="btn-primary">
+          <div className="w-16 h-16 bg-purple-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-3xl">📋</span>
+          </div>
+          <p className="text-lg font-bold text-[#1B2A4A] mb-1">Geen taken gevonden</p>
+          <p className="text-sm text-gray-400 mb-6">Maak de eerste taak aan voor het management team</p>
+          <button onClick={() => { setShowModal(true); setError("") }} className="btn-primary">
             + Nieuwe taak aanmaken
           </button>
         </div>
