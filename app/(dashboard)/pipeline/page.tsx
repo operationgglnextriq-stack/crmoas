@@ -40,14 +40,19 @@ export default function PipelinePage() {
   const [editDeal, setEditDeal] = useState<Deal | null>(null)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState<Partial<Deal>>({})
+  const [viewDeal, setViewDeal] = useState<Deal | null>(null)
+  const [showViewModal, setShowViewModal] = useState(false)
 
   const isManager = teamMember?.rol === 'founder' || teamMember?.rol === 'sales_manager'
   const isCloser = teamMember?.rol === 'closer'
+  const isSetter = teamMember?.rol === 'setter'
+  const isTech = ['web_developer', 'head_of_tech', 'ai_engineer'].includes(teamMember?.rol ?? '')
+  const canCreate = isManager || isCloser
   const naam = teamMember?.naam ?? ''
 
   const canEdit = (deal: Deal) => {
     if (isManager) return true
-    if (isCloser && deal.closer_naam === naam) return true
+    if (isCloser) return true
     return false
   }
 
@@ -67,6 +72,11 @@ export default function PipelinePage() {
   }, [])
 
   useEffect(() => { fetchDeals() }, [fetchDeals])
+
+  // Setters zien alleen hun eigen deals
+  const zichtbareDeals = isSetter
+    ? deals.filter(d => d.setter_naam === naam)
+    : deals
 
   const handleDragStart = (event: DragStartEvent) => {
     const deal = deals.find(d => d.id === event.active.id)
@@ -100,6 +110,11 @@ export default function PipelinePage() {
     setEditDeal(deal)
     setForm(deal)
     setShowModal(true)
+  }
+
+  const openView = (deal: Deal) => {
+    setViewDeal(deal)
+    setShowViewModal(true)
   }
 
   const handleSave = async () => {
@@ -165,7 +180,7 @@ export default function PipelinePage() {
 
   if (loading) return <LoadingSpinner />
 
-  const totalPipeline = deals.filter(d => !['verloren','opgeleverd'].includes(d.deal_status))
+  const totalPipeline = zichtbareDeals.filter(d => !['verloren','opgeleverd'].includes(d.deal_status))
     .reduce((s, d) => s + (d.deal_waarde ?? 0), 0)
 
   const closers = leden.filter(l => ['closer','sales_manager','founder'].includes(l.rol))
@@ -181,24 +196,24 @@ export default function PipelinePage() {
           <h2 className="text-lg font-bold text-[#1B2A4A]">Sales Pipeline</h2>
           <p className="text-sm text-gray-500">Pipeline waarde: <span className="font-semibold text-[#6B3FA0]">€{totalPipeline.toLocaleString('nl-NL')}</span></p>
         </div>
-        {(isManager || isCloser) && <button onClick={openNew} className="btn-primary">+ Nieuwe deal</button>}
+        {canCreate && <button onClick={openNew} className="btn-primary">+ Nieuwe deal</button>}
       </div>
 
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div className="flex gap-3 overflow-x-auto pb-4">
           {STAGES.map(stage => (
             <DroppableColumn key={stage.key} stage={stage}
-              deals={deals.filter(d => d.deal_status === stage.key)}
-              onEdit={openEdit} onDelete={handleDelete}
+              deals={zichtbareDeals.filter(d => d.deal_status === stage.key)}
+              onEdit={openEdit} onDelete={handleDelete} onView={openView}
               canEditDeal={canEdit} isManager={isManager} />
           ))}
         </div>
         <DragOverlay>
-          {activeDeal && <DealCard deal={activeDeal} onEdit={() => {}} onDelete={() => {}} isDragging canEdit={false} isManager={false} />}
+          {activeDeal && <DealCard deal={activeDeal} onEdit={() => {}} onDelete={() => {}} onView={() => {}} isDragging canEdit={false} isManager={false} />}
         </DragOverlay>
       </DndContext>
 
-      {/* Deal modal */}
+      {/* Deal modal (bewerken/aanmaken) */}
       <Modal open={showModal} onClose={() => setShowModal(false)} title={editDeal ? 'Deal bewerken' : 'Nieuwe deal'} size="lg">
         <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
           <div className="grid grid-cols-2 gap-4">
@@ -331,13 +346,62 @@ export default function PipelinePage() {
           </div>
         </div>
       </Modal>
+
+      {/* Read-only deal modal */}
+      <Modal open={showViewModal} onClose={() => setShowViewModal(false)} title="Deal details" size="lg">
+        {viewDeal && (
+          <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Bedrijf</p>
+                <p className="font-semibold text-[#1B2A4A]">{viewDeal.bedrijfsnaam}</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Status</p>
+                <p>{STAGES.find(s => s.key === viewDeal.deal_status)?.label ?? viewDeal.deal_status}</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Deal waarde</p>
+                <p className="font-bold text-[#1A7A3A]">{viewDeal.deal_waarde ? `€${viewDeal.deal_waarde.toLocaleString('nl-NL')}` : '—'}</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Product</p>
+                <p>{viewDeal.product ? (PRODUCT_LABELS[viewDeal.product] ?? viewDeal.product) : '—'}</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Closer</p>
+                <p>{viewDeal.closer_naam ?? '—'}</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Setter</p>
+                <p>{viewDeal.setter_naam ?? '—'}</p>
+              </div>
+              {viewDeal.creator_naam && (
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Creator</p>
+                  <p>{viewDeal.creator_naam}</p>
+                </div>
+              )}
+              {viewDeal.notities && (
+                <div className="col-span-2 bg-gray-50 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Notities</p>
+                  <p className="text-gray-700 whitespace-pre-wrap">{viewDeal.notities}</p>
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end pt-2 border-t">
+              <button onClick={() => setShowViewModal(false)} className="btn-secondary">Sluiten</button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }
 
-function DroppableColumn({ stage, deals, onEdit, onDelete, canEditDeal, isManager }: {
+function DroppableColumn({ stage, deals, onEdit, onDelete, onView, canEditDeal, isManager }: {
   stage: typeof STAGES[0]; deals: Deal[]; onEdit: (d: Deal) => void; onDelete: (id: string) => void
-  canEditDeal: (d: Deal) => boolean; isManager: boolean
+  onView: (d: Deal) => void; canEditDeal: (d: Deal) => boolean; isManager: boolean
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.key })
   const total = deals.reduce((s, d) => s + (d.deal_waarde ?? 0), 0)
@@ -349,7 +413,7 @@ function DroppableColumn({ stage, deals, onEdit, onDelete, canEditDeal, isManage
       </div>
       <div className="p-2 space-y-2 min-h-[200px]">
         {deals.map(deal => (
-          <DealCard key={deal.id} deal={deal} onEdit={onEdit} onDelete={onDelete}
+          <DealCard key={deal.id} deal={deal} onEdit={onEdit} onDelete={onDelete} onView={onView}
             canEdit={canEditDeal(deal)} isManager={isManager} />
         ))}
       </div>
@@ -357,9 +421,9 @@ function DroppableColumn({ stage, deals, onEdit, onDelete, canEditDeal, isManage
   )
 }
 
-function DealCard({ deal, onEdit, onDelete, isDragging, canEdit, isManager }: {
+function DealCard({ deal, onEdit, onDelete, onView, isDragging, canEdit, isManager }: {
   deal: Deal; onEdit: (d: Deal) => void; onDelete: (id: string) => void
-  isDragging?: boolean; canEdit: boolean; isManager: boolean
+  onView: (d: Deal) => void; isDragging?: boolean; canEdit: boolean; isManager: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({ id: deal.id, disabled: !canEdit })
   const days = differenceInDays(new Date(), new Date(deal.created_at))
@@ -374,12 +438,16 @@ function DealCard({ deal, onEdit, onDelete, isDragging, canEdit, isManager }: {
       {deal.closer_naam && <p className="text-xs text-gray-500 mt-1">👤 {deal.closer_naam}</p>}
       {deal.setter_naam && <p className="text-xs text-gray-400">🎯 {deal.setter_naam}</p>}
       <p className="text-xs text-gray-400">{days}d geleden</p>
-      {canEdit && (
-        <div className="flex gap-1 mt-2" onPointerDown={e => e.stopPropagation()}>
-          <button onClick={() => onEdit(deal)} className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100">Bewerk</button>
-          {isManager && <button onClick={() => onDelete(deal.id)} className="text-xs px-2 py-1 bg-red-50 text-red-700 rounded hover:bg-red-100">Verwijder</button>}
-        </div>
-      )}
+      <div className="flex gap-1 mt-2" onPointerDown={e => e.stopPropagation()}>
+        {canEdit ? (
+          <>
+            <button onClick={() => onEdit(deal)} className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100">Bewerk</button>
+            {isManager && <button onClick={() => onDelete(deal.id)} className="text-xs px-2 py-1 bg-red-50 text-red-700 rounded hover:bg-red-100">Verwijder</button>}
+          </>
+        ) : (
+          <button onClick={() => onView(deal)} className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded hover:bg-gray-200">👁 Bekijk</button>
+        )}
+      </div>
     </div>
   )
 }
