@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Niet ingelogd' }, { status: 401 })
 
   const admin = getAdminClient()
-  const { data, error } = await admin.from('team_members').select('*').eq('email', user.email!).single()
+  const { data, error } = await admin.from('team_members').select('*').ilike('email', user.email!).eq('actief', true).single()
   if (error || !data) return NextResponse.json({ error: 'Niet gevonden' }, { status: 404 })
   return NextResponse.json(data)
 }

@@ -32,6 +32,7 @@ export default function TeamPage() {
   const [showModal, setShowModal] = useState(false)
   const [editTarget, setEditTarget] = useState<TeamMember | null>(null)
   const [deactiveerTarget, setDeactiveerTarget] = useState<TeamMember | null>(null)
+  const [verwijderTarget, setVerwijderTarget] = useState<TeamMember | null>(null)
   const [resetTarget, setResetTarget] = useState<TeamMember | null>(null)
   const [nieuwWachtwoord, setNieuwWachtwoord] = useState('')
   const [resetSaving, setResetSaving] = useState(false)
@@ -150,6 +151,20 @@ export default function TeamPage() {
     })
     fetchData()
   }
+  const handleVerwijder = async (lid: TeamMember) => {
+    const res = await apiFetch('/api/crud', {
+      method: 'DELETE',
+      body: JSON.stringify({ table: 'team_members', id: lid.id })
+    })
+    if (!res.ok) {
+      alert('Verwijderen mislukt')
+      return
+    }
+    setVerwijderTarget(null)
+    fetchData()
+  }
+
+
 
   const handleResetWachtwoord = async () => {
     if (!resetTarget || !nieuwWachtwoord) return
@@ -244,6 +259,10 @@ export default function TeamPage() {
                     <div className="flex gap-1 flex-wrap">
                       <button onClick={() => openEdit(lid)} className="text-xs px-2 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100">Bewerk</button>
                       <button onClick={() => { setResetTarget(lid); setNieuwWachtwoord(''); setResetMsg('') }} className="text-xs px-2 py-1 rounded bg-purple-50 text-purple-700 hover:bg-purple-100">🔑 Wachtwoord</button>
+                      <button onClick={() => setVerwijderTarget(lid)}
+                        className="text-xs px-2 py-1 bg-red-50 text-red-700 rounded hover:bg-red-100">
+                        🗑️ Verwijder
+                      </button>
                       <button onClick={() => setDeactiveerTarget(lid)}
                         className={`text-xs px-2 py-1 rounded ${lid.actief ? 'bg-orange-50 text-orange-700 hover:bg-orange-100' : 'bg-green-50 text-green-700 hover:bg-green-100'}`}>
                         {lid.actief ? 'Deactiveer' : 'Activeer'}
@@ -343,7 +362,15 @@ export default function TeamPage() {
         title={deactiveerTarget?.actief ? 'Teamlid deactiveren' : 'Teamlid activeren'}
         message={`Weet je zeker dat je ${deactiveerTarget?.naam} wilt ${deactiveerTarget?.actief ? 'deactiveren' : 'activeren'}?`}
         confirmLabel={deactiveerTarget?.actief ? 'Deactiveren' : 'Activeren'}
-        danger={deactiveerTarget?.actief}
+      />
+      <ConfirmModal
+        open={!!verwijderTarget}
+        onClose={() => setVerwijderTarget(null)}
+        onConfirm={() => verwijderTarget && handleVerwijder(verwijderTarget)}
+        title="Teamlid verwijderen"
+        message={`Weet je zeker dat je ${verwijderTarget?.naam} permanent wilt verwijderen? Dit kan niet ongedaan gemaakt worden.`}
+        confirmLabel="Permanent verwijderen"
+        danger
       />
     </div>
   )
