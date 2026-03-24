@@ -46,31 +46,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
+    let mounted = true
+
     const init = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
+        if (!mounted) return
         setUser(user)
-        if (user) await fetchTeamMember()
+        if (user) {
+          // Zet loading false DIRECT na user check, niet wachten op teamMember
+          setLoading(false)
+          await fetchTeamMember()
+        } else {
+          setLoading(false)
+        }
       } catch (e) {
         console.error('Auth init error:', e)
-      } finally {
-        setLoading(false)
+        if (mounted) setLoading(false)
       }
     }
 
     init()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!mounted) return
       setUser(session?.user ?? null)
       if (session?.user) {
-        await fetchTeamMember()
+        fetchTeamMember() // niet awaiten — loading al false
       } else {
         setTeamMember(null)
       }
-      setLoading(false)
     })
 
-    return () => subscription.unsubscribe()
+    return () => { mounted = false; subscription.unsubscribe() }
   }, [])
 
   const signOut = async () => {
