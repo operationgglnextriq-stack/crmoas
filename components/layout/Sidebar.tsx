@@ -13,7 +13,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { href: '/dashboard', icon: '🏠', label: 'Dashboard', roles: ['founder', 'sales_manager', 'setter', 'outreacher', 'closer', 'creator', 'ambassadeur'] },
+  { href: '/dashboard', icon: '🏠', label: 'Dashboard', roles: ['founder', 'sales_manager', 'setter', 'outreacher', 'closer', 'creator', 'ambassadeur', 'web_developer', 'head_of_tech', 'ai_engineer'] },
   { href: '/leads', icon: '👥', label: 'Leads', roles: ['founder', 'sales_manager', 'setter'] },
   { href: '/outreach', icon: '📞', label: 'Outreach', roles: ['founder', 'sales_manager', 'outreacher'] },
   { href: '/pipeline', icon: '💼', label: 'Pipeline', roles: ['founder', 'sales_manager', 'closer'] },
@@ -22,6 +22,7 @@ const navItems: NavItem[] = [
   { href: '/leaderboard', icon: '🏆', label: 'Leaderboard', roles: ['founder', 'sales_manager'] },
   { href: '/commissies', icon: '💰', label: 'Commissies', roles: ['founder', 'sales_manager'] },
   { href: '/team', icon: '⚙️', label: 'Team beheer', roles: ['founder', 'sales_manager'] },
+  { href: '/todo', icon: '📋', label: 'Todo List', roles: ['founder', 'sales_manager', 'web_developer', 'head_of_tech'] },
 ]
 
 const rolLabels: Record<Rol, string> = {
@@ -33,6 +34,8 @@ const rolLabels: Record<Rol, string> = {
   creator: 'Creator',
   ambassadeur: 'Ambassadeur',
   web_developer: 'Web Developer',
+  head_of_tech: 'Head of Tech',
+  ai_engineer: 'AI Engineer',
 }
 
 export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {

@@ -1,4 +1,4 @@
-export type Rol = 'founder' | 'sales_manager' | 'setter' | 'outreacher' | 'closer' | 'creator' | 'ambassadeur' | 'web_developer'
+export type Rol = 'founder' | 'sales_manager' | 'setter' | 'outreacher' | 'closer' | 'creator' | 'ambassadeur' | 'web_developer' | 'head_of_tech' | 'ai_engineer'
 export type Afdeling = 'sales' | 'outreach' | 'content' | 'management' | 'tech'
 
 export interface TeamMember {

@@ -258,3 +258,17 @@ CREATE POLICY "Iedereen kan dagrapport indienen" ON dagrapporten
 -- INSERT INTO team_members (naam, email, rol, afdeling, commissie_pct) VALUES
 --   ('Saif', 'saif@nextriq.nl', 'founder', 'management', 0),
 --   ('Kim', 'kim@nextriq.nl', 'sales_manager', 'management', 5);
+
+-- Todo List module
+CREATE TABLE IF NOT EXISTS todos (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at timestamptz DEFAULT now(),
+  titel text NOT NULL,
+  omschrijving text,
+  prioriteit text DEFAULT 'normaal' CHECK (prioriteit IN ('laag', 'normaal', 'hoog', 'urgent')),
+  status text DEFAULT 'open' CHECK (status IN ('open', 'bezig', 'gedaan')),
+  toegewezen_aan text,
+  aangemaakt_door text NOT NULL,
+  deadline date,
+  afdeling text
+);
