@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { apiFetch } from '@/lib/apiFetch'
 import { useAuth } from '@/context/AuthContext'
 import { Lead } from '@/types'
 import { BANTBadge, KwalificatieBadge } from '@/components/ui/Badge'
@@ -50,7 +51,7 @@ export default function LeadsPage() {
   })
 
   const handleDelete = async (lead: Lead) => {
-    await fetch('/api/crud', { method: 'DELETE', headers: {'Content-Type':'application/json'}, body: JSON.stringify({table:'leads', id: lead.id}) })
+    await apiFetch('/api/crud', { method: 'DELETE', body: JSON.stringify({table:'leads', id: lead.id}) })
     setLeads(prev => prev.filter(l => l.id !== lead.id))
   }
 

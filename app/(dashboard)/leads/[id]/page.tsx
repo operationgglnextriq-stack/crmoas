@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { apiFetch } from '@/lib/apiFetch'
 import { Lead, KwalificatieStatus, Sector, Kanaal, ProductInteresse, BantBudget, BantAutoriteit, BantTiming } from '@/types'
 import { BANTBadge, KwalificatieBadge } from '@/components/ui/Badge'
 import { calcBANT } from '@/types'
@@ -21,7 +22,7 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
 
   const fetchLead = async () => {
-    const res = await fetch(`/api/crud?table=leads&id=${params.id}`)
+    const res = await apiFetch(`/api/crud?table=leads&id=${params.id}`)
     const data = await res.json()
     setLead(data)
     setForm(data)
@@ -32,9 +33,8 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
 
   const handleSave = async () => {
     setSaving(true)
-    await fetch('/api/crud', {
+    await apiFetch('/api/crud', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ table: 'leads', id: params.id, data: form })
     })
     setSaving(false)
@@ -43,9 +43,8 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
   }
 
   const handleDelete = async () => {
-    const res = await fetch('/api/crud', {
+    const res = await apiFetch('/api/crud', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ table: 'leads', id: params.id })
     })
     const data = await res.json()

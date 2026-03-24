@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
+import { apiFetch } from '@/lib/apiFetch'
 import { TeamMember, Rol, Afdeling } from '@/types'
 import Modal from '@/components/ui/Modal'
 import { ConfirmModal } from '@/components/ui/Modal'
@@ -50,8 +51,8 @@ export default function TeamPage() {
 
   const fetchData = async () => {
     const [ledenRes, usersRes] = await Promise.all([
-      fetch('/api/crud?table=team_members'),
-      fetch('/api/team/auth-users'),
+      apiFetch('/api/crud?table=team_members'),
+      apiFetch('/api/team/auth-users'),
     ])
     const ledenData = await ledenRes.json()
     const usersData = usersRes.ok ? await usersRes.json() : []
@@ -83,18 +84,16 @@ export default function TeamPage() {
   const handleSave = async () => {
     setSaving(true)
     if (editTarget) {
-      await fetch('/api/crud', {
+      await apiFetch('/api/crud', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ table: 'team_members', id: editTarget.id, data: {
           naam: form.naam, rol: form.rol, afdeling: form.afdeling,
           commissie_pct: Number(form.commissie_pct) || 0, discord_naam: form.discord_naam || null,
         }})
       })
     } else {
-      const res = await fetch('/api/team/create', {
+      const res = await apiFetch('/api/team/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: form.email, password: form.wachtwoord, naam: form.naam,
           rol: form.rol, afdeling: form.afdeling,
@@ -115,9 +114,8 @@ export default function TeamPage() {
   }
 
   const handleDeactiveer = async (lid: TeamMember) => {
-    await fetch('/api/crud', {
+    await apiFetch('/api/crud', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ table: 'team_members', id: lid.id, data: { actief: !lid.actief } })
     })
     fetchData()
@@ -134,9 +132,8 @@ export default function TeamPage() {
       setResetSaving(false)
       return
     }
-    const res = await fetch('/api/team/reset-password', {
+    const res = await apiFetch('/api/team/reset-password', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: authUser.id, newPassword: nieuwWachtwoord })
     })
     const data = await res.json()
@@ -152,9 +149,8 @@ export default function TeamPage() {
   const handleInvite = async () => {
     setInviteSaving(true)
     setInviteMsg('')
-    const res = await fetch('/api/team/invite', {
+    const res = await apiFetch('/api/team/invite', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...inviteForm, commissie_pct: Number(inviteForm.commissie_pct) || 0 })
     })
     const data = await res.json()

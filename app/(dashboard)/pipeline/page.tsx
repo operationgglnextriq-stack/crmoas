@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useAuth } from '@/context/AuthContext'
+import { apiFetch } from '@/lib/apiFetch'
 import { Deal, DealStatus, TeamMember } from '@/types'
 import Modal from '@/components/ui/Modal'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
@@ -54,8 +55,8 @@ export default function PipelinePage() {
 
   const fetchDeals = useCallback(async () => {
     const [dealsRes, ledenRes] = await Promise.all([
-      fetch('/api/crud?table=deals'),
-      fetch('/api/crud?table=team_members'),
+      apiFetch('/api/crud?table=deals'),
+      apiFetch('/api/crud?table=team_members'),
     ])
     const dealsData = await dealsRes.json()
     const ledenData = await ledenRes.json()
@@ -82,9 +83,8 @@ export default function PipelinePage() {
     if (!deal || deal.deal_status === newStatus || !canEdit(deal)) return
 
     setDeals(prev => prev.map(d => d.id === active.id ? { ...d, deal_status: newStatus } : d))
-    await fetch('/api/crud', {
+    await apiFetch('/api/crud', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ table: 'deals', id: active.id, data: { deal_status: newStatus } })
     })
   }
@@ -117,15 +117,13 @@ export default function PipelinePage() {
     form.commissie_web_developer = isWebsite ? Math.round(waarde * 0.25) : 0
 
     if (editDeal) {
-      await fetch('/api/crud', {
+      await apiFetch('/api/crud', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ table: 'deals', id: editDeal.id, data: form })
       })
     } else {
-      await fetch('/api/crud', {
+      await apiFetch('/api/crud', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ table: 'deals', data: form })
       })
     }
@@ -137,9 +135,8 @@ export default function PipelinePage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Deal verwijderen?')) return
     setDeals(prev => prev.filter(d => d.id !== id))
-    const res = await fetch('/api/crud', {
+    const res = await apiFetch('/api/crud', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ table: 'deals', id })
     })
     if (!res.ok) {

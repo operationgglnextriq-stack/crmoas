@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
+import { apiFetch } from '@/lib/apiFetch'
 import { Dagrapport } from '@/types'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import Modal, { ConfirmModal } from '@/components/ui/Modal'
@@ -26,7 +27,7 @@ export default function DagraportenPage() {
   const isManager = teamMember?.rol === 'founder' || teamMember?.rol === 'sales_manager'
 
   const fetchData = async () => {
-    const res = await fetch('/api/crud?table=dagrapporten')
+    const res = await apiFetch('/api/crud?table=dagrapporten')
     const data = await res.json()
     setRapporten(Array.isArray(data) ? data.sort((a: Dagrapport, b: Dagrapport) =>
       new Date(b.rapport_datum).getTime() - new Date(a.rapport_datum).getTime()
@@ -50,9 +51,8 @@ export default function DagraportenPage() {
 
   const handleSave = async () => {
     setSaving(true)
-    await fetch('/api/crud', {
+    await apiFetch('/api/crud', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ table: 'dagrapporten', data: form })
     })
     setSaving(false)
@@ -61,9 +61,8 @@ export default function DagraportenPage() {
   }
 
   const handleDelete = async (id: string) => {
-    const res = await fetch('/api/crud', {
+    const res = await apiFetch('/api/crud', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ table: 'dagrapporten', id })
     })
     const data = await res.json()

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
+import { apiFetch } from '@/lib/apiFetch'
 import { Deal, TeamMember } from '@/types'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
@@ -17,8 +18,8 @@ export default function CommissiesPage() {
   useEffect(() => {
     const fetchAll = async () => {
       const [dealsRes, ledenRes] = await Promise.all([
-        fetch('/api/crud?table=deals'),
-        fetch('/api/crud?table=team_members'),
+        apiFetch('/api/crud?table=deals'),
+        apiFetch('/api/crud?table=team_members'),
       ])
       const dealsData = await dealsRes.json()
       const ledenData = await ledenRes.json()

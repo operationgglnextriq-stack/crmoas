@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
+import { apiFetch } from '@/lib/apiFetch'
 import { Marktdata } from '@/types'
 import Modal, { ConfirmModal } from '@/components/ui/Modal'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
@@ -27,7 +28,7 @@ export default function MarktdataPage() {
   const isManager = teamMember?.rol === 'founder' || teamMember?.rol === 'sales_manager'
 
   const fetchData = async () => {
-    const res = await fetch('/api/crud?table=marktdata')
+    const res = await apiFetch('/api/crud?table=marktdata')
     const data = await res.json()
     setItems(Array.isArray(data) ? data.sort((a: Marktdata, b: Marktdata) => b.frequentie - a.frequentie) : [])
     setLoading(false)
@@ -65,15 +66,13 @@ export default function MarktdataPage() {
   const handleSave = async () => {
     setSaving(true)
     if (editTarget) {
-      await fetch('/api/crud', {
+      await apiFetch('/api/crud', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ table: 'marktdata', id: editTarget.id, data: form })
       })
     } else {
-      await fetch('/api/crud', {
+      await apiFetch('/api/crud', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ table: 'marktdata', data: {
           ...form,
           ingediend_door: teamMember?.naam ?? '',
@@ -88,9 +87,8 @@ export default function MarktdataPage() {
   }
 
   const handleDelete = async (id: string) => {
-    await fetch('/api/crud', {
+    await apiFetch('/api/crud', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ table: 'marktdata', id })
     })
     setDeleteTarget(null)
