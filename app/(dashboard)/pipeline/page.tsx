@@ -274,17 +274,50 @@ export default function PipelinePage() {
               </label>
             </div>
             {form.recurring && (
-              <div className="grid grid-cols-2 gap-4 pl-6">
-                <div>
-                  <label className="label">Maandbedrag recurring (€)</label>
-                  <input type="number" className="input"
-                    placeholder="bijv. 150"
-                    value={form.recurring_maand_bedrag ?? ''}
-                    onChange={e => setForm(f => ({...f, recurring_maand_bedrag: Number(e.target.value) || null}))} />
+              <div className="grid grid-cols-1 gap-4 pl-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="label">Maandbedrag recurring (€)</label>
+                    <input type="number" className="input"
+                      placeholder="bijv. 150"
+                      value={form.recurring_maand_bedrag ?? ""}
+                      onChange={e => setForm(f => ({...f, recurring_maand_bedrag: Number(e.target.value) || null}))} />
+                  </div>
                 </div>
-                <div className="flex items-end pb-2">
-                  <p className="text-xs text-gray-400">Commissies worden berekend over dit maandbedrag</p>
-                </div>
+                {/* Selecteer wie recurring commissie ontvangt */}
+                {isManager && (
+                  <div>
+                    <label className="label">Wie ontvangt recurring commissie?</label>
+                    <div className="grid grid-cols-2 gap-2 mt-1">
+                      {leden.filter(l => l.actief && l.rol !== "founder").map(lid => {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        const selected = ((form as any).recurring_commissie_leden ?? []).includes(lid.naam)
+                        return (
+                          <label key={lid.id} className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-colors ${selected ? "border-[#6B3FA0] bg-purple-50" : "border-gray-200 hover:border-gray-300"}`}>
+                            <input
+                              type="checkbox"
+                              checked={selected}
+                              onChange={e => {
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                const huidig: string[] = (form as any).recurring_commissie_leden ?? []
+                                const nieuw = e.target.checked
+                                  ? [...huidig, lid.naam]
+                                  : huidig.filter((n: string) => n !== lid.naam)
+                                setForm(f => ({...f, recurring_commissie_leden: nieuw}))
+                              }}
+                              className="w-4 h-4 accent-[#6B3FA0]"
+                            />
+                            <span className="text-sm">
+                              <span className="font-medium">{lid.naam}</span>
+                              <span className="text-gray-400 text-xs ml-1">({lid.commissie_pct}%)</span>
+                            </span>
+                          </label>
+                        )
+                      })}
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">Geselecteerde leden ontvangen maandelijks hun % over het maandbedrag</p>
+                  </div>
+                )}
               </div>
             )}
           </div>

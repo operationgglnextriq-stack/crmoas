@@ -107,6 +107,7 @@ export interface Deal {
   scan_check: boolean
   recurring: boolean
   recurring_maand_bedrag: number | null
+  recurring_commissie_leden: string[] | null
   notities: string | null
 }
 

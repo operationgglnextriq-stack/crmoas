@@ -153,13 +153,32 @@ export default function CommissiesPage() {
       if (commissieMaand > 0) recurringDeals.push({ deal, rol, maandbedrag, commissieMaand, product })
     }
 
-    addEntry(deal.setter_naam, deal.commissie_setter, 'Setter')
-    addEntry(deal.closer_naam, deal.commissie_closer, 'Closer')
-    addEntry(deal.creator_naam, deal.commissie_creator, 'Creator')
-    const sm = leden.find(l => l.rol === 'sales_manager')
-    if (sm && (!filterNaam || sm.naam === filterNaam)) {
-      const smComm = Math.round(maandbedrag * 0.05)
-      if (smComm > 0) recurringDeals.push({ deal, rol: 'Sales Manager', maandbedrag, commissieMaand: smComm, product })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const recurringLeden: string[] | null = (deal as any).recurring_commissie_leden
+    const heeftSelectie = recurringLeden && recurringLeden.length > 0
+
+    if (heeftSelectie) {
+      // Alleen geselecteerde leden
+      for (const naam of recurringLeden!) {
+        const lid = leden.find(l => l.naam === naam)
+        if (!lid) continue
+        if (filterNaam && naam !== filterNaam) continue
+        const pct = lid.commissie_pct / 100
+        const commissieMaand = Math.round(maandbedrag * pct)
+        if (commissieMaand > 0) {
+          recurringDeals.push({ deal, rol: lid.rol, maandbedrag, commissieMaand, product })
+        }
+      }
+    } else {
+      // Fallback: gebruik de naam-velden zoals voorheen
+      addEntry(deal.setter_naam, deal.commissie_setter, 'Setter')
+      addEntry(deal.closer_naam, deal.commissie_closer, 'Closer')
+      addEntry(deal.creator_naam, deal.commissie_creator, 'Creator')
+      const sm = leden.find(l => l.rol === 'sales_manager')
+      if (sm && (!filterNaam || sm.naam === filterNaam)) {
+        const smComm = Math.round(maandbedrag * 0.05)
+        if (smComm > 0) recurringDeals.push({ deal, rol: 'Sales Manager', maandbedrag, commissieMaand: smComm, product })
+      }
     }
   }
 
