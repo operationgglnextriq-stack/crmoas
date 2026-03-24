@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { apiFetch } from '@/lib/apiFetch'
-import { Lead, KwalificatieStatus, Sector, Kanaal, ProductInteresse, BantBudget, BantAutoriteit, BantTiming } from '@/types'
+import { Lead, Deal, KwalificatieStatus, Sector, Kanaal, ProductInteresse, BantBudget, BantAutoriteit, BantTiming } from '@/types'
 import { BANTBadge, KwalificatieBadge } from '@/components/ui/Badge'
 import { calcBANT } from '@/types'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
@@ -24,8 +24,55 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
   const { teamMember } = useAuth()
   const [doorSturing, setDoorSturing] = useState(false)
   const [doorSturenSuccess, setDoorSturenSuccess] = useState(false)
+  const [deals, setDeals] = useState<Deal[]>([])
+  const [showDealModal, setShowDealModal] = useState(false)
+  const [dealForm, setDealForm] = useState<Partial<Deal>>({ deal_status: 'call', betaling_ontvangen: false, commissie_betaald: false, recurring: false })
+  const [dealSaving, setDealSaving] = useState(false)
 
   const canDoorSturen = teamMember && !['outreacher', 'ambassadeur', 'creator'].includes(teamMember.rol)
+
+  const PRODUCT_LABELS: Record<string, string> = {
+    website_std: 'Website Standaard', website_maat: 'Website Maatwerk', hosting: 'Hosting',
+    ai_scan_pro: 'AI Scan Pro', ai_scan_dig: 'AI Scan Digitaal', ai_agency: 'AI Agency',
+    ink: 'INK', comm_klant: 'Commissie Klant', comm_extern: 'Commissie Extern',
+  }
+
+  const STATUS_LABELS: Record<string, string> = {
+    call: 'Call', offerte: 'Offerte', onderhand: 'Onderhandeling',
+    gesloten: 'Gesloten', betaald: 'Betaald', levering: 'Levering',
+    opgeleverd: 'Opgeleverd', verloren: 'Verloren',
+  }
+
+  const STATUS_COLORS: Record<string, string> = {
+    call: 'bg-blue-100 text-blue-700', offerte: 'bg-yellow-100 text-yellow-700',
+    onderhand: 'bg-orange-100 text-orange-700', gesloten: 'bg-green-100 text-green-700',
+    betaald: 'bg-emerald-100 text-emerald-700', levering: 'bg-purple-100 text-purple-700',
+    opgeleverd: 'bg-gray-100 text-gray-700', verloren: 'bg-red-100 text-red-700',
+  }
+
+  const handleDealSave = async () => {
+    if (!lead) return
+    setDealSaving(true)
+    await apiFetch('/api/crud', {
+      method: 'POST',
+      body: JSON.stringify({
+        table: 'deals',
+        data: {
+          ...dealForm,
+          bedrijfsnaam: lead.bedrijfsnaam,
+          lead_id: lead.id,
+          setter_naam: dealForm.setter_naam || teamMember?.naam,
+          betaling_ontvangen: dealForm.betaling_ontvangen ?? false,
+          commissie_betaald: false,
+          recurring: dealForm.recurring ?? false,
+        }
+      })
+    })
+    setDealSaving(false)
+    setShowDealModal(false)
+    setDealForm({ deal_status: 'call', betaling_ontvangen: false, commissie_betaald: false, recurring: false })
+    fetchLead()
+  }
 
   const handleDoorSturen = async () => {
     if (!lead || !teamMember) return
@@ -56,10 +103,17 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
   }
 
   const fetchLead = async () => {
-    const res = await apiFetch(`/api/crud?table=leads&id=${params.id}`)
-    const data = await res.json()
+    const [leadRes, dealsRes] = await Promise.all([
+      apiFetch(`/api/crud?table=leads&id=${params.id}`),
+      apiFetch(`/api/crud?table=deals`),
+    ])
+    const data = await leadRes.json()
+    const allDeals = await dealsRes.json()
     setLead(data)
     setForm(data)
+    if (Array.isArray(allDeals)) {
+      setDeals(allDeals.filter((d: Deal) => d.lead_id === params.id))
+    }
     setLoading(false)
   }
 
@@ -155,6 +209,49 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
       </div>
 
       {/* Bewerk modal */}
+
+      {/* Deals / Producten sectie */}
+      <div className="card space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-[#1B2A4A]">💼 Deals & Producten</h3>
+          {canDoorSturen && (
+            <button
+              onClick={() => setShowDealModal(true)}
+              className="text-sm px-3 py-2 rounded-lg bg-[#1B2A4A] text-white hover:bg-[#253a68]"
+            >
+              + Product toevoegen
+            </button>
+          )}
+        </div>
+        {deals.length === 0 ? (
+          <p className="text-sm text-gray-400 py-4 text-center">Nog geen deals gekoppeld aan deze lead</p>
+        ) : (
+          <div className="space-y-2">
+            {deals.map(deal => (
+              <div key={deal.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 bg-gray-50">
+                <div className="flex items-center gap-3">
+                  <span className={`badge ${STATUS_COLORS[deal.deal_status] ?? 'bg-gray-100 text-gray-700'}`}>
+                    {STATUS_LABELS[deal.deal_status] ?? deal.deal_status}
+                  </span>
+                  <span className="text-sm font-medium text-[#1B2A4A]">
+                    {PRODUCT_LABELS[deal.product ?? ''] ?? deal.product ?? 'Onbekend product'}
+                  </span>
+                  {deal.deal_waarde && (
+                    <span className="text-sm text-gray-500">€{deal.deal_waarde.toLocaleString('nl-NL')}</span>
+                  )}
+                  {deal.recurring && (
+                    <span className="badge bg-purple-100 text-purple-700">🔄 Recurring</span>
+                  )}
+                </div>
+                <div className="text-xs text-gray-400">
+                  {deal.closer_naam && <span>Closer: {deal.closer_naam}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <Modal open={showEdit} onClose={() => setShowEdit(false)} title="Lead bewerken" size="lg">
         <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
           <div className="grid grid-cols-2 gap-4">
@@ -227,6 +324,68 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
             <button onClick={() => setShowEdit(false)} className="btn-secondary">Annuleren</button>
             <button onClick={handleSave} disabled={saving} className="btn-primary disabled:opacity-50">
               {saving ? 'Opslaan...' : 'Wijzigingen opslaan'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+
+      {/* Deal aanmaak modal */}
+      <Modal open={showDealModal} onClose={() => setShowDealModal(false)} title="Product toevoegen">
+        <div className="space-y-4">
+          <div>
+            <label className="label">Product</label>
+            <select className="input" value={dealForm.product ?? ''} onChange={e => setDealForm(f => ({...f, product: e.target.value as Deal['product']}))}>
+              <option value="">- kies product -</option>
+              <option value="website_std">Website Standaard</option>
+              <option value="website_maat">Website Maatwerk</option>
+              <option value="hosting">Hosting</option>
+              <option value="ai_scan_pro">AI Scan Pro</option>
+              <option value="ai_scan_dig">AI Scan Digitaal</option>
+              <option value="ai_agency">AI Agency</option>
+              <option value="ink">INK</option>
+              <option value="comm_klant">Commissie Klant</option>
+              <option value="comm_extern">Commissie Extern</option>
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="label">Deal waarde (€)</label>
+              <input type="number" className="input" value={dealForm.deal_waarde ?? ''} onChange={e => setDealForm(f => ({...f, deal_waarde: Number(e.target.value)}))} />
+            </div>
+            <div>
+              <label className="label">Status</label>
+              <select className="input" value={dealForm.deal_status ?? 'call'} onChange={e => setDealForm(f => ({...f, deal_status: e.target.value as Deal['deal_status']}))}>
+                <option value="call">Call</option>
+                <option value="offerte">Offerte</option>
+                <option value="onderhand">Onderhandeling</option>
+                <option value="gesloten">Gesloten</option>
+                <option value="betaald">Betaald</option>
+                <option value="levering">Levering</option>
+                <option value="opgeleverd">Opgeleverd</option>
+                <option value="verloren">Verloren</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="label">Closer</label>
+            <input className="input" placeholder="Naam closer" value={dealForm.closer_naam ?? ''} onChange={e => setDealForm(f => ({...f, closer_naam: e.target.value || null}))} />
+          </div>
+          <div className="flex items-center gap-2">
+            <input type="checkbox" id="recurring-deal" checked={dealForm.recurring ?? false} onChange={e => setDealForm(f => ({...f, recurring: e.target.checked}))} className="w-4 h-4 accent-[#6B3FA0]" />
+            <label htmlFor="recurring-deal" className="text-sm text-gray-700">Recurring deal (maandelijks terugkerend)</label>
+          </div>
+          {dealForm.recurring && (
+            <div>
+              <label className="label">Maandbedrag (€)</label>
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              <input type="number" className="input" placeholder="bijv. 50" value={(dealForm as any).recurring_maand_bedrag ?? ''} onChange={e => setDealForm(f => ({...f, recurring_maand_bedrag: Number(e.target.value) || null}))} />
+            </div>
+          )}
+          <div className="flex gap-3 pt-2 border-t">
+            <button onClick={() => setShowDealModal(false)} className="btn-secondary flex-1">Annuleren</button>
+            <button onClick={handleDealSave} disabled={dealSaving} className="btn-primary flex-1 disabled:opacity-50">
+              {dealSaving ? 'Opslaan...' : 'Deal aanmaken'}
             </button>
           </div>
         </div>
