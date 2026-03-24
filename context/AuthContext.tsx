@@ -27,7 +27,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchTeamMember = async () => {
     try {
-      const res = await fetch('/api/me')
+      // Haal token op en stuur mee als Authorization header
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      const res = await fetch('/api/me', {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      })
       if (res.ok) {
         const data = await res.json()
         setTeamMember(data)
