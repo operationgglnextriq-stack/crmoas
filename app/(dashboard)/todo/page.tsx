@@ -188,11 +188,8 @@ export default function TodoPage() {
             <button
               key={s}
               onClick={() => setFilterStatus(s)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors capitalize ${
-                filterStatus === s
-                  ? 'bg-[#6B3FA0] text-white shadow-sm'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
+              className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors capitalize"
+              style={filterStatus === s ? { backgroundColor: '#6B3FA0', color: 'white' } : { color: '#4B5563' }}
             >
               {s === 'alle' ? 'Alle' : s}
             </button>
@@ -216,9 +213,13 @@ export default function TodoPage() {
       {loadingTodos ? (
         <LoadingSpinner />
       ) : gefilterd.length === 0 ? (
-        <div className="card text-center py-12 text-gray-400">
-          <p className="text-3xl mb-2">✅</p>
-          <p>Geen taken gevonden</p>
+        <div className="card text-center py-16">
+          <p className="text-5xl mb-4">📋</p>
+          <p className="text-lg font-semibold text-[#1B2A4A] mb-2">Geen taken gevonden</p>
+          <p className="text-sm text-gray-400 mb-6">Maak je eerste taak aan voor het management team</p>
+          <button onClick={() => { setShowModal(true); setError('') }} className="btn-primary">
+            + Nieuwe taak aanmaken
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
