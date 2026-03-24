@@ -93,6 +93,27 @@ export default function NieuweLeadPage() {
         {step === 1 && (
           <>
             <h2 className="text-lg font-semibold text-[#1B2A4A]">Stap 1 — Bedrijfsinfo</h2>
+            <div>
+              <label className="label">Lead type *</label>
+              <div className="flex gap-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="leadtype" value="warm"
+                    checked={form.kanaal !== "outbound" && form.kanaal !== "biolink"}
+                    onChange={() => setForm(f => ({...f, kwalificatiestatus: "warm"}))}
+                    className="accent-[#6B3FA0]"
+                  />
+                  <span className="text-sm font-medium">Warm lead</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="leadtype" value="koud"
+                    checked={form.kanaal === "outbound"}
+                    onChange={() => setForm(f => ({...f, kanaal: "outbound", kwalificatiestatus: "followup_1"}))}
+                    className="accent-[#6B3FA0]"
+                  />
+                  <span className="text-sm font-medium">Koud lead (cold call/outreach)</span>
+                </label>
+              </div>
+            </div>
             {duplicaatWaarschuwing && (
               <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg text-sm text-orange-800">
                 ⚠️ Dit bedrijf bestaat al — ingevoerd via {duplicaatWaarschuwing}. Je kunt toch opslaan.

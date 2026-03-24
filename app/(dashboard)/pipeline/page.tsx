@@ -105,30 +105,42 @@ export default function PipelinePage() {
   const handleSave = async () => {
     setSaving(true)
 
-    // Auto-bereken commissies
+    // Bereken commissies — gebruik lokale variabelen, NIET form direct muteren
     const setter = leden.find(l => l.naam === form.setter_naam)
     const closer = leden.find(l => l.naam === form.closer_naam)
     const creator = leden.find(l => l.naam === form.creator_naam)
-    const ambassadeur = leden.find(l => l.naam === form.ambassadeur_naam)
-    const salesManager = leden.find(l => l.rol === 'sales_manager' && l.actief)
+    const ambassadeur = leden.find(l => l.naam === (form as any).ambassadeur_naam)
+    const salesManager = leden.find(l => l.rol === "sales_manager" && l.actief)
     const waarde = form.deal_waarde ?? 0
-    form.commissie_setter = setter ? Math.round(waarde * (setter.commissie_pct / 100)) : (form.commissie_setter ?? 0)
-    form.commissie_closer = closer ? Math.round(waarde * (closer.commissie_pct / 100)) : (form.commissie_closer ?? 0)
-    form.commissie_creator = creator ? Math.round(waarde * (creator.commissie_pct / 100)) : (form.commissie_creator ?? 0)
-    form.commissie_ambassadeur = ambassadeur ? Math.round(waarde * (ambassadeur.commissie_pct / 100)) : (form.commissie_ambassadeur ?? 0)
-    form.commissie_manager = salesManager ? Math.round(waarde * 0.05) : 0
-    form.commissie_web_developer = 0
+
+    const dataToSave = {
+      ...form,
+      commissie_setter: setter ? Math.round(waarde * (setter.commissie_pct / 100)) : (form.commissie_setter ?? 0),
+      commissie_closer: closer ? Math.round(waarde * (closer.commissie_pct / 100)) : (form.commissie_closer ?? 0),
+      commissie_creator: creator ? Math.round(waarde * (creator.commissie_pct / 100)) : (form.commissie_creator ?? 0),
+      commissie_ambassadeur: ambassadeur ? Math.round(waarde * (ambassadeur.commissie_pct / 100)) : ((form as any).commissie_ambassadeur ?? 0),
+      commissie_manager: salesManager ? Math.round(waarde * 0.05) : 0,
+      commissie_web_developer: 0,
+    }
 
     if (editDeal) {
-      await apiFetch('/api/crud', {
-        method: 'PATCH',
-        body: JSON.stringify({ table: 'deals', id: editDeal.id, data: form })
+      const res = await apiFetch("/api/crud", {
+        method: "PATCH",
+        body: JSON.stringify({ table: "deals", id: editDeal.id, data: dataToSave })
       })
+      if (!res.ok) {
+        const err = await res.json()
+        alert("Opslaan mislukt: " + (err.error || "onbekende fout"))
+      }
     } else {
-      await apiFetch('/api/crud', {
-        method: 'POST',
-        body: JSON.stringify({ table: 'deals', data: form })
+      const res = await apiFetch("/api/crud", {
+        method: "POST",
+        body: JSON.stringify({ table: "deals", data: dataToSave })
       })
+      if (!res.ok) {
+        const err = await res.json()
+        alert("Aanmaken mislukt: " + (err.error || "onbekende fout"))
+      }
     }
     setSaving(false)
     setShowModal(false)

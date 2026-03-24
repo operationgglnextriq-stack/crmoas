@@ -24,6 +24,7 @@ export default function LeadsPage() {
   const [filterSector, setFilterSector] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [showDuplicaten, setShowDuplicaten] = useState(false)
+  const [filterKoud, setFilterKoud] = useState(false)
   const [setters, setSetters] = useState<string[]>([])
   const [deleteTarget, setDeleteTarget] = useState<Lead | null>(null)
 
@@ -51,6 +52,7 @@ export default function LeadsPage() {
     if (filterSector && l.sector !== filterSector) return false
     if (filterStatus && l.kwalificatiestatus !== filterStatus) return false
     if (showDuplicaten && !l.is_duplicaat) return false
+    if (filterKoud && !(l.kanaal === 'outbound' || l.kwalificatiestatus?.startsWith('followup'))) return false
     return true
   })
 
@@ -103,6 +105,10 @@ export default function LeadsPage() {
               <option key={s} value={s}>{s.replace('_',' ')}</option>
             ))}
           </select>
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input type="checkbox" checked={filterKoud} onChange={e => setFilterKoud(e.target.checked)} className="rounded" />
+            Alleen koud
+          </label>
           <label className="flex items-center gap-2 text-sm cursor-pointer">
             <input type="checkbox" checked={showDuplicaten} onChange={e => setShowDuplicaten(e.target.checked)} className="rounded" />
             Alleen duplicaten
