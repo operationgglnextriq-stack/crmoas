@@ -48,32 +48,52 @@ export default function CommissiesPage() {
     : gesloten
 
   const getCommissie = (deal: Deal, n: string) => {
-    if (deal.closer_naam === n && deal.commissie_closer != null) return deal.commissie_closer
-    if (deal.setter_naam === n && deal.commissie_setter != null) return deal.commissie_setter
-    if (deal.creator_naam === n && deal.commissie_creator != null) return deal.commissie_creator
-    return 0
+    let total = 0
+    if (deal.closer_naam === n) total += deal.commissie_closer ?? 0
+    if (deal.setter_naam === n) total += deal.commissie_setter ?? 0
+    if (deal.creator_naam === n) total += deal.commissie_creator ?? 0
+    if (deal.ambassadeur_naam === n) total += deal.commissie_ambassadeur ?? 0
+    return total
   }
+
+  // Sales manager commissie (5% over alle deals)
+  const currentLid = leden.find(l => l.naam === filterNaam)
+  const salesManagerCommOpen = currentLid?.rol === 'sales_manager'
+    ? gesloten.filter(d => !d.commissie_betaald).reduce((s, d) => s + (d.commissie_manager ?? 0), 0)
+    : 0
+  const salesManagerCommBetaald = currentLid?.rol === 'sales_manager'
+    ? gesloten.filter(d => d.commissie_betaald).reduce((s, d) => s + (d.commissie_manager ?? 0), 0)
+    : 0
 
   // KPI totals
   const totaalOpen = isManager && !selectedLid
     ? gesloten.filter(d => !d.commissie_betaald).reduce((s, d) =>
-        s + (d.commissie_closer ?? 0) + (d.commissie_setter ?? 0) + (d.commissie_creator ?? 0), 0)
+        s + (d.commissie_closer ?? 0) + (d.commissie_setter ?? 0) + (d.commissie_creator ?? 0) +
+        (d.commissie_ambassadeur ?? 0) + (d.commissie_manager ?? 0), 0)
     : gefilterd.filter(d => !d.commissie_betaald).reduce((s, d) =>
-        s + getCommissie(d, filterNaam ?? ''), 0)
+        s + getCommissie(d, filterNaam ?? ''), 0) + salesManagerCommOpen
 
   const totaalBetaald = isManager && !selectedLid
     ? gesloten.filter(d => d.commissie_betaald).reduce((s, d) =>
-        s + (d.commissie_closer ?? 0) + (d.commissie_setter ?? 0) + (d.commissie_creator ?? 0), 0)
+        s + (d.commissie_closer ?? 0) + (d.commissie_setter ?? 0) + (d.commissie_creator ?? 0) +
+        (d.commissie_ambassadeur ?? 0) + (d.commissie_manager ?? 0), 0)
     : gefilterd.filter(d => d.commissie_betaald).reduce((s, d) =>
-        s + getCommissie(d, filterNaam ?? ''), 0)
+        s + getCommissie(d, filterNaam ?? ''), 0) + salesManagerCommBetaald
 
   // Manager overzicht per teamlid (geen filter op €0)
   const managerOverzicht = leden.map(lid => {
     const lidDeals = gesloten.filter(d =>
-      d.closer_naam === lid.naam || d.setter_naam === lid.naam || d.creator_naam === lid.naam
+      d.closer_naam === lid.naam || d.setter_naam === lid.naam ||
+      d.creator_naam === lid.naam || d.ambassadeur_naam === lid.naam
     )
-    const open = lidDeals.filter(d => !d.commissie_betaald).reduce((s, d) => s + getCommissie(d, lid.naam), 0)
-    const betaald = lidDeals.filter(d => d.commissie_betaald).reduce((s, d) => s + getCommissie(d, lid.naam), 0)
+    const managerCommOpen = lid.rol === 'sales_manager'
+      ? gesloten.filter(d => !d.commissie_betaald).reduce((s, d) => s + (d.commissie_manager ?? 0), 0)
+      : 0
+    const managerCommBetaald = lid.rol === 'sales_manager'
+      ? gesloten.filter(d => d.commissie_betaald).reduce((s, d) => s + (d.commissie_manager ?? 0), 0)
+      : 0
+    const open = lidDeals.filter(d => !d.commissie_betaald).reduce((s, d) => s + getCommissie(d, lid.naam), 0) + managerCommOpen
+    const betaald = lidDeals.filter(d => d.commissie_betaald).reduce((s, d) => s + getCommissie(d, lid.naam), 0) + managerCommBetaald
     return { lid, open, betaald, deals: lidDeals.length }
   })
 
@@ -188,6 +208,7 @@ export default function CommissiesPage() {
                     <th className="text-left px-4 py-3 font-semibold text-gray-700">Status</th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-700">Setter</th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-700">Closer</th>
+                    <th className="text-right px-4 py-3 font-semibold text-purple-600">Manager comm.</th>
                     <th className="text-right px-4 py-3 font-semibold text-gray-700">Totale comm.</th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-700">Comm. status</th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-700">Actie</th>
@@ -195,7 +216,7 @@ export default function CommissiesPage() {
                 </thead>
                 <tbody>
                   {gesloten.map((deal, i) => {
-                    const totComm = (deal.commissie_closer ?? 0) + (deal.commissie_setter ?? 0) + (deal.commissie_creator ?? 0)
+                    const totComm = (deal.commissie_closer ?? 0) + (deal.commissie_setter ?? 0) + (deal.commissie_creator ?? 0) + (deal.commissie_ambassadeur ?? 0) + (deal.commissie_manager ?? 0)
                     return (
                       <tr key={deal.id} className={`border-b border-gray-100 hover:bg-gray-50 ${i % 2 === 1 ? 'bg-gray-50/50' : ''}`}>
                         <td className="px-4 py-3 font-medium text-[#1B2A4A]">{deal.bedrijfsnaam}</td>
@@ -205,6 +226,7 @@ export default function CommissiesPage() {
                         </td>
                         <td className="px-4 py-3 text-gray-600">{deal.setter_naam ?? '—'}</td>
                         <td className="px-4 py-3 text-gray-600">{deal.closer_naam ?? '—'}</td>
+                        <td className="px-4 py-3 text-right font-semibold text-purple-600">€{(deal.commissie_manager ?? 0).toLocaleString('nl-NL')}</td>
                         <td className="px-4 py-3 text-right font-bold text-[#1A7A3A]">€{totComm.toLocaleString('nl-NL')}</td>
                         <td className="px-4 py-3">{statusBadge(deal)}</td>
                         <td className="px-4 py-3">
@@ -221,7 +243,7 @@ export default function CommissiesPage() {
                     )
                   })}
                   {gesloten.length === 0 && (
-                    <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">Geen gesloten deals</td></tr>
+                    <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400">Geen gesloten deals</td></tr>
                   )}
                 </tbody>
               </table>
@@ -260,6 +282,23 @@ export default function CommissiesPage() {
       )}
 
       {/* Detail per deal (specifiek teamlid of niet-manager) */}
+      {/* Sales manager commissie sectie */}
+      {(selectedLid || !isManager) && currentLid?.rol === 'sales_manager' && (
+        <div className="card !p-5 border-l-4 border-l-purple-500">
+          <p className="text-xs text-gray-500 mb-1 font-semibold uppercase tracking-wide">Manager commissie (5% over alle deals)</p>
+          <div className="flex gap-6 mt-2">
+            <div>
+              <p className="text-xs text-gray-400">Openstaand</p>
+              <p className="text-xl font-bold text-orange-600">€{salesManagerCommOpen.toLocaleString('nl-NL')}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400">Uitbetaald</p>
+              <p className="text-xl font-bold text-green-600">€{salesManagerCommBetaald.toLocaleString('nl-NL')}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {(selectedLid || !isManager) && (
         <div className="card !p-0 overflow-hidden">
           <div className="px-4 py-3 bg-gray-50 border-b flex items-center justify-between">
@@ -285,7 +324,7 @@ export default function CommissiesPage() {
               <tbody>
                 {gefilterd.map((deal, i) => {
                   const n = filterNaam ?? ''
-                  const rol = deal.closer_naam === n ? 'Closer' : deal.setter_naam === n ? 'Setter' : deal.creator_naam === n ? 'Creator' : 'Overig'
+                  const rol = deal.closer_naam === n ? 'Closer' : deal.setter_naam === n ? 'Setter' : deal.creator_naam === n ? 'Creator' : deal.ambassadeur_naam === n ? 'Ambassadeur' : 'Overig'
                   const comm = getCommissie(deal, n)
                   return (
                     <tr key={deal.id} className={`border-b border-gray-100 hover:bg-gray-50 ${i % 2 === 1 ? 'bg-gray-50/50' : ''}`}>

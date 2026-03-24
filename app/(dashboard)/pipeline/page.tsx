@@ -109,12 +109,15 @@ export default function PipelinePage() {
     const setter = leden.find(l => l.naam === form.setter_naam)
     const closer = leden.find(l => l.naam === form.closer_naam)
     const creator = leden.find(l => l.naam === form.creator_naam)
+    const ambassadeur = leden.find(l => l.naam === form.ambassadeur_naam)
+    const salesManager = leden.find(l => l.rol === 'sales_manager' && l.actief)
     const waarde = form.deal_waarde ?? 0
-    const isWebsite = ['website_std', 'website_maat', 'hosting'].includes(form.product ?? '')
     form.commissie_setter = setter ? Math.round(waarde * (setter.commissie_pct / 100)) : (form.commissie_setter ?? 0)
     form.commissie_closer = closer ? Math.round(waarde * (closer.commissie_pct / 100)) : (form.commissie_closer ?? 0)
     form.commissie_creator = creator ? Math.round(waarde * (creator.commissie_pct / 100)) : (form.commissie_creator ?? 0)
-    form.commissie_web_developer = isWebsite ? Math.round(waarde * 0.25) : 0
+    form.commissie_ambassadeur = ambassadeur ? Math.round(waarde * (ambassadeur.commissie_pct / 100)) : (form.commissie_ambassadeur ?? 0)
+    form.commissie_manager = salesManager ? Math.round(waarde * 0.05) : 0
+    form.commissie_web_developer = 0
 
     if (editDeal) {
       await apiFetch('/api/crud', {
@@ -153,6 +156,9 @@ export default function PipelinePage() {
 
   const closers = leden.filter(l => ['closer','sales_manager','founder'].includes(l.rol))
   const setters = leden.filter(l => ['setter','sales_manager','founder'].includes(l.rol))
+  const creators = leden.filter(l => l.rol === 'creator')
+  const ambassadeurs = leden.filter(l => l.rol === 'ambassadeur')
+  const salesManagerComm = Math.round((form.deal_waarde ?? 0) * 0.05)
 
   return (
     <div className="space-y-4">
@@ -196,21 +202,40 @@ export default function PipelinePage() {
                 {STAGES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
               </select></div>
             <div><label className="label">Closer</label>
-              <select className="input" value={form.closer_naam ?? ''} onChange={e => setForm(f => ({...f, closer_naam: e.target.value}))}>
-                <option value="">-</option>
+              <select className="input" value={form.closer_naam ?? ''} onChange={e => setForm(f => ({...f, closer_naam: e.target.value || null}))}>
+                <option value="">- geen -</option>
                 {closers.map(l => <option key={l.id} value={l.naam}>{l.naam}</option>)}
               </select></div>
             <div><label className="label">Setter</label>
-              <select className="input" value={form.setter_naam ?? ''} onChange={e => setForm(f => ({...f, setter_naam: e.target.value}))}>
-                <option value="">-</option>
+              <select className="input" value={form.setter_naam ?? ''} onChange={e => setForm(f => ({...f, setter_naam: e.target.value || null}))}>
+                <option value="">- geen -</option>
                 {setters.map(l => <option key={l.id} value={l.naam}>{l.naam}</option>)}
+              </select></div>
+            <div><label className="label">Creator</label>
+              <select className="input" value={form.creator_naam ?? ''} onChange={e => setForm(f => ({...f, creator_naam: e.target.value || null}))}>
+                <option value="">- geen -</option>
+                {creators.map(l => <option key={l.id} value={l.naam}>{l.naam}</option>)}
+              </select></div>
+            <div><label className="label">Ambassadeur</label>
+              <select className="input" value={form.ambassadeur_naam ?? ''} onChange={e => setForm(f => ({...f, ambassadeur_naam: e.target.value || null}))}>
+                <option value="">- geen -</option>
+                {ambassadeurs.map(l => <option key={l.id} value={l.naam}>{l.naam}</option>)}
               </select></div>
             <div><label className="label">Commissie closer (€)</label>
               <input type="number" className="input" value={form.commissie_closer ?? ''} onChange={e => setForm(f => ({...f, commissie_closer: Number(e.target.value)}))} /></div>
             <div><label className="label">Commissie setter (€)</label>
               <input type="number" className="input" value={form.commissie_setter ?? ''} onChange={e => setForm(f => ({...f, commissie_setter: Number(e.target.value)}))} /></div>
-            <div><label className="label">Commissie web dev (€)</label>
-              <input type="number" className="input" value={form.commissie_web_developer ?? ''} onChange={e => setForm(f => ({...f, commissie_web_developer: Number(e.target.value)}))} /></div>
+            {form.creator_naam && (
+              <div><label className="label">Commissie creator (€)</label>
+                <input type="number" className="input" value={form.commissie_creator ?? ''} onChange={e => setForm(f => ({...f, commissie_creator: Number(e.target.value)}))} /></div>
+            )}
+            {form.ambassadeur_naam && (
+              <div><label className="label">Commissie ambassadeur (€)</label>
+                <input type="number" className="input" value={form.commissie_ambassadeur ?? ''} onChange={e => setForm(f => ({...f, commissie_ambassadeur: Number(e.target.value)}))} /></div>
+            )}
+            <div className="col-span-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
+              <p className="text-sm text-gray-600">Sales manager commissie: <span className="font-semibold text-[#6B3FA0]">€{salesManagerComm.toLocaleString('nl-NL')}</span> <span className="text-gray-400">(5% — automatisch)</span></p>
+            </div>
           </div>
           {isManager && (
             <div className="flex gap-4">

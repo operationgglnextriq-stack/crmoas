@@ -99,6 +99,7 @@ export interface Deal {
   commissie_setter: number | null
   commissie_closer: number | null
   commissie_creator: number | null
+  commissie_ambassadeur: number | null
   commissie_manager: number | null
   commissie_web_developer: number | null
   commissie_betaald: boolean
