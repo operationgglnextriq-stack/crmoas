@@ -177,7 +177,7 @@ export default function CommissiesPage() {
       const sm = leden.find(l => l.rol === 'sales_manager')
       if (sm && (!filterNaam || sm.naam === filterNaam)) {
         const smComm = Math.round(maandbedrag * 0.05)
-        if (smComm > 0) recurringDeals.push({ deal, rol: 'Sales Manager', maandbedrag, commissieMaand: smComm, product })
+        if (smComm > 0) recurringDeals.push({ deal, rol: 'Team Manager', maandbedrag, commissieMaand: smComm, product })
       }
     }
   }

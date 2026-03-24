@@ -28,7 +28,7 @@ const navItems: NavItem[] = [
 
 const rolLabels: Record<Rol, string> = {
   founder: 'Founder',
-  sales_manager: 'Sales Manager',
+  sales_manager: 'Team Manager',
   setter: 'Appointment Setter',
   outreacher: 'Cold Outreacher',
   closer: 'Closer',

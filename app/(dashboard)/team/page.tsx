@@ -9,7 +9,7 @@ import { ConfirmModal } from '@/components/ui/Modal'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
 const ROL_LABELS: Record<Rol, string> = {
-  founder: 'Founder', sales_manager: 'Sales Manager', setter: 'Appointment Setter',
+  founder: 'Founder', sales_manager: 'Team Manager', setter: 'Appointment Setter',
   outreacher: 'Cold Outreacher', closer: 'Closer', creator: 'Creator', ambassadeur: 'Ambassadeur',
   web_developer: 'Web Developer', head_of_tech: 'Head of Tech', ai_engineer: 'AI Engineer',
 }
