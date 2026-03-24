@@ -192,7 +192,7 @@ export default function TeamPage() {
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">Rol</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">E-mail</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">Discord</th>
-                <th className="text-right px-4 py-3 font-semibold text-gray-700">Commissie %</th>
+                {isManager && <th className="text-right px-4 py-3 font-semibold text-gray-700">Commissie %</th>}
                 <th className="text-right px-4 py-3 font-semibold text-gray-700">Omzet</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">Status</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">Acties</th>
@@ -205,7 +205,7 @@ export default function TeamPage() {
                   <td className="px-4 py-3"><span className={`badge ${ROL_COLORS[lid.rol as Rol]}`}>{ROL_LABELS[lid.rol as Rol]}</span></td>
                   <td className="px-4 py-3 text-gray-500 text-xs">{lid.email}</td>
                   <td className="px-4 py-3 text-gray-500 text-xs">{lid.discord_naam ?? '-'}</td>
-                  <td className="px-4 py-3 text-right font-medium">{lid.commissie_pct}%</td>
+                  {isManager && <td className="px-4 py-3 text-right font-medium">{lid.commissie_pct}%</td>}
                   <td className="px-4 py-3 text-right text-[#1A7A3A] font-semibold">€{(lid.totale_omzet ?? 0).toLocaleString('nl-NL')}</td>
                   <td className="px-4 py-3">
                     {lid.actief ? <span className="badge bg-green-100 text-green-700">✓ Actief</span> : <span className="badge bg-gray-100 text-gray-500">Inactief</span>}
@@ -252,8 +252,10 @@ export default function TeamPage() {
               </select></div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div><label className="label">Commissie %</label>
-              <input type="number" min="0" max="100" step="0.5" className="input" value={form.commissie_pct} onChange={e => setForm(f => ({...f, commissie_pct: e.target.value}))} /></div>
+            {isManager && (
+              <div><label className="label">Commissie %</label>
+                <input type="number" min="0" max="100" step="0.5" className="input" value={form.commissie_pct} onChange={e => setForm(f => ({...f, commissie_pct: e.target.value}))} /></div>
+            )}
             <div><label className="label">Discord naam</label>
               <input className="input" value={form.discord_naam} onChange={e => setForm(f => ({...f, discord_naam: e.target.value}))} /></div>
           </div>
@@ -293,7 +295,7 @@ export default function TeamPage() {
           <div><label className="label">E-mailadres *</label><input type="email" className="input" value={inviteForm.email} onChange={e => setInviteForm(f => ({...f, email: e.target.value}))} /></div>
           <div><label className="label">Rol</label><select className="input" value={inviteForm.rol} onChange={e => setInviteForm(f => ({...f, rol: e.target.value as Rol}))}>{Object.entries(ROL_LABELS).map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></div>
           <div><label className="label">Afdeling</label><select className="input" value={inviteForm.afdeling} onChange={e => setInviteForm(f => ({...f, afdeling: e.target.value as Afdeling}))}>{['sales','outreach','content','management','tech'].map(a => <option key={a} value={a}>{a}</option>)}</select></div>
-          <div><label className="label">Commissie %</label><input type="number" min="0" max="100" className="input" value={inviteForm.commissie_pct} onChange={e => setInviteForm(f => ({...f, commissie_pct: e.target.value}))} /></div>
+          {isManager && <div><label className="label">Commissie %</label><input type="number" min="0" max="100" className="input" value={inviteForm.commissie_pct} onChange={e => setInviteForm(f => ({...f, commissie_pct: e.target.value}))} /></div>}
           <div><label className="label">Discord naam</label><input className="input" value={inviteForm.discord_naam} onChange={e => setInviteForm(f => ({...f, discord_naam: e.target.value}))} /></div>
         </div>
         {inviteMsg && <p className="text-sm font-medium">{inviteMsg}</p>}

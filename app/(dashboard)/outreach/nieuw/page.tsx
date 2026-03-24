@@ -1,15 +1,19 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/context/AuthContext'
+import { apiFetch } from '@/lib/apiFetch'
 
 export default function NieuwOutreachPage() {
   const { teamMember } = useAuth()
   const router = useRouter()
   const supabase = createClient()
   const [saving, setSaving] = useState(false)
+  const [duplicaatData, setDuplicaatData] = useState<{ bron: string; ingevoerd_door: string; datum: string } | null>(null)
+  const [duplicaatAkkoord, setDuplicaatAkkoord] = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>()
 
   const [form, setForm] = useState({
     bedrijfsnaam: '', website: '', contactpersoon: '', telefoonnummer: '',
@@ -21,10 +25,31 @@ export default function NieuwOutreachPage() {
     if (teamMember) setForm(f => ({ ...f, outreacher_naam: teamMember.naam }))
   }, [teamMember])
 
+  const checkDuplicate = async (naam: string) => {
+    if (naam.length < 2) { setDuplicaatData(null); return }
+    const res = await apiFetch(`/api/check-duplicate?naam=${encodeURIComponent(naam)}`)
+    if (res.ok) {
+      const data = await res.json()
+      if (data.duplicaat) {
+        setDuplicaatData({ bron: data.bron, ingevoerd_door: data.ingevoerd_door, datum: data.datum })
+      } else {
+        setDuplicaatData(null)
+      }
+    }
+  }
+
+  const handleBedrijfsnaamChange = (value: string) => {
+    setForm(f => ({ ...f, bedrijfsnaam: value }))
+    setDuplicaatAkkoord(false)
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => checkDuplicate(value), 500)
+  }
+
   const set = (key: string, value: string) => setForm(f => ({ ...f, [key]: value }))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (duplicaatData && !duplicaatAkkoord) return
     setSaving(true)
     const { error } = await supabase.from('outreach_leads').insert({
       ...form,
@@ -41,9 +66,30 @@ export default function NieuwOutreachPage() {
     <div className="max-w-2xl">
       <form onSubmit={handleSubmit} className="card space-y-4">
         <h2 className="text-lg font-semibold text-[#1B2A4A]">Nieuw outreach contact</h2>
+        {duplicaatData && (
+          <div className="p-4 bg-orange-50 border border-orange-300 rounded-lg space-y-3">
+            <div className="flex items-start gap-2">
+              <span className="text-orange-600 text-lg leading-none mt-0.5">⚠️</span>
+              <div className="flex-1">
+                <p className="font-semibold text-orange-800">Mogelijk duplicaat gevonden</p>
+                <ul className="text-sm text-orange-700 mt-1 space-y-0.5">
+                  <li>• Bedrijf: <strong>{form.bedrijfsnaam}</strong></li>
+                  <li>• Bron: <strong>{duplicaatData.bron === 'leads' ? 'Leads (Sales)' : 'Outreach'}</strong></li>
+                  <li>• Ingevoerd door: <strong>{duplicaatData.ingevoerd_door}</strong></li>
+                  <li>• Datum: <strong>{new Date(duplicaatData.datum).toLocaleDateString('nl-NL')}</strong></li>
+                </ul>
+                <p className="text-sm font-medium text-orange-800 mt-2">Weet je zeker dat je dit wilt opslaan?</p>
+              </div>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={duplicaatAkkoord} onChange={e => setDuplicaatAkkoord(e.target.checked)} className="accent-orange-600" />
+              <span className="text-sm text-orange-800 font-medium">Ja, ik weet dat dit een duplicaat is</span>
+            </label>
+          </div>
+        )}
         <div>
           <label className="label">Bedrijfsnaam *</label>
-          <input className="input" value={form.bedrijfsnaam} onChange={e => set('bedrijfsnaam', e.target.value)} required />
+          <input className="input" value={form.bedrijfsnaam} onChange={e => handleBedrijfsnaamChange(e.target.value)} required />
         </div>
         <div>
           <label className="label">Website</label>
@@ -105,7 +151,7 @@ export default function NieuwOutreachPage() {
         </div>
         <div className="flex gap-3 pt-4 border-t">
           <button type="button" onClick={() => router.push('/outreach')} className="btn-secondary">← Annuleren</button>
-          <button type="submit" disabled={saving} className="btn-primary disabled:opacity-50">
+          <button type="submit" disabled={saving || (!!duplicaatData && !duplicaatAkkoord)} className="btn-primary disabled:opacity-50">
             {saving ? 'Opslaan...' : '✓ Contact opslaan'}
           </button>
         </div>

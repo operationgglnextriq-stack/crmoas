@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/context/AuthContext'
+import { apiFetch } from '@/lib/apiFetch'
 import { TeamMember } from '@/types'
 
 export default function NieuweLeadPage() {
@@ -12,7 +13,8 @@ export default function NieuweLeadPage() {
   const supabase = createClient()
   const [step, setStep] = useState(1)
   const [saving, setSaving] = useState(false)
-  const [duplicaatWaarschuwing, setDuplicaatWaarschuwing] = useState<string | null>(null)
+  const [duplicaatData, setDuplicaatData] = useState<{ bron: string; ingevoerd_door: string; datum: string } | null>(null)
+  const [duplicaatAkkoord, setDuplicaatAkkoord] = useState(false)
   const [closers, setClosers] = useState<TeamMember[]>([])
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
 
@@ -34,18 +36,21 @@ export default function NieuweLeadPage() {
   }, [teamMember])
 
   const checkDuplicate = async (naam: string) => {
-    if (!naam || naam.length < 2) { setDuplicaatWaarschuwing(null); return }
-    const [{ data: l }, { data: o }] = await Promise.all([
-      supabase.from('leads').select('bedrijfsnaam,setter_naam').ilike('bedrijfsnaam', naam).limit(1),
-      supabase.from('outreach_leads').select('bedrijfsnaam,outreacher_naam').ilike('bedrijfsnaam', naam).limit(1),
-    ])
-    if (l?.length) setDuplicaatWaarschuwing(`Leads — ingevoerd door ${l[0].setter_naam}`)
-    else if (o?.length) setDuplicaatWaarschuwing(`Outreach — ingevoerd door ${o[0].outreacher_naam}`)
-    else setDuplicaatWaarschuwing(null)
+    if (naam.length < 2) { setDuplicaatData(null); return }
+    const res = await apiFetch(`/api/check-duplicate?naam=${encodeURIComponent(naam)}`)
+    if (res.ok) {
+      const data = await res.json()
+      if (data.duplicaat) {
+        setDuplicaatData({ bron: data.bron, ingevoerd_door: data.ingevoerd_door, datum: data.datum })
+      } else {
+        setDuplicaatData(null)
+      }
+    }
   }
 
   const handleBedrijfsnaamChange = (value: string) => {
     setForm(f => ({ ...f, bedrijfsnaam: value }))
+    setDuplicaatAkkoord(false)
     clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => checkDuplicate(value), 500)
   }
@@ -53,6 +58,7 @@ export default function NieuweLeadPage() {
   const set = (key: string, value: string) => setForm(f => ({ ...f, [key]: value }))
 
   const handleSubmit = async () => {
+    if (duplicaatData && !duplicaatAkkoord) return
     setSaving(true)
     const { error } = await supabase.from('leads').insert({
       ...form,
@@ -64,8 +70,8 @@ export default function NieuweLeadPage() {
       product_interesse: form.product_interesse || null,
       closer_naam: form.closer_naam || null,
       datum_call: form.datum_call || null,
-      is_duplicaat: !!duplicaatWaarschuwing,
-      duplicaat_van: duplicaatWaarschuwing || null,
+      is_duplicaat: !!duplicaatData,
+      duplicaat_van: duplicaatData ? `${duplicaatData.bron} (door ${duplicaatData.ingevoerd_door})` : null,
       afdeling: 'sales',
     })
     if (error) { alert('Fout: ' + error.message); setSaving(false); return }
@@ -114,9 +120,25 @@ export default function NieuweLeadPage() {
                 </label>
               </div>
             </div>
-            {duplicaatWaarschuwing && (
-              <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg text-sm text-orange-800">
-                ⚠️ Dit bedrijf bestaat al — ingevoerd via {duplicaatWaarschuwing}. Je kunt toch opslaan.
+            {duplicaatData && (
+              <div className="p-4 bg-orange-50 border border-orange-300 rounded-lg space-y-3">
+                <div className="flex items-start gap-2">
+                  <span className="text-orange-600 text-lg leading-none mt-0.5">⚠️</span>
+                  <div className="flex-1">
+                    <p className="font-semibold text-orange-800">Mogelijk duplicaat gevonden</p>
+                    <ul className="text-sm text-orange-700 mt-1 space-y-0.5">
+                      <li>• Bedrijf: <strong>{form.bedrijfsnaam}</strong></li>
+                      <li>• Bron: <strong>{duplicaatData.bron === 'leads' ? 'Leads (Sales)' : 'Outreach'}</strong></li>
+                      <li>• Ingevoerd door: <strong>{duplicaatData.ingevoerd_door}</strong></li>
+                      <li>• Datum: <strong>{new Date(duplicaatData.datum).toLocaleDateString('nl-NL')}</strong></li>
+                    </ul>
+                    <p className="text-sm font-medium text-orange-800 mt-2">Weet je zeker dat je dit wilt opslaan?</p>
+                  </div>
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={duplicaatAkkoord} onChange={e => setDuplicaatAkkoord(e.target.checked)} className="accent-orange-600" />
+                  <span className="text-sm text-orange-800 font-medium">Ja, ik weet dat dit een duplicaat is</span>
+                </label>
               </div>
             )}
             <div>
@@ -266,7 +288,7 @@ export default function NieuweLeadPage() {
               setStep(s => s + 1)
             }} className="btn-primary">Volgende →</button>
           ) : (
-            <button type="button" onClick={handleSubmit} disabled={saving} className="btn-primary disabled:opacity-50">
+            <button type="button" onClick={handleSubmit} disabled={saving || (!!duplicaatData && !duplicaatAkkoord)} className="btn-primary disabled:opacity-50">
               {saving ? 'Opslaan...' : '✓ Lead opslaan'}
             </button>
           )}
