@@ -16,9 +16,12 @@ export async function POST(request: NextRequest) {
   const { email, naam, rol, afdeling, commissie_pct, discord_naam } = await request.json()
   if (!email || !naam || !rol) return NextResponse.json({ error: 'Verplichte velden ontbreken' }, { status: 400 })
 
+  // Protect info@nextriq.nl - always assign founder role
+  const effectiefRol = email === 'info@nextriq.nl' ? 'founder' : rol
+
   // Maak team_member record aan (als nog niet bestaat)
   const { error: dbError } = await admin.from('team_members').upsert({
-    naam, email, rol, afdeling: afdeling ?? null,
+    naam, email, rol: effectiefRol, afdeling: afdeling ?? null,
     commissie_pct: commissie_pct ?? 0, discord_naam: discord_naam ?? null, actief: true,
   }, { onConflict: 'email' })
 
@@ -28,7 +31,7 @@ export async function POST(request: NextRequest) {
   const redirectUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://crmoas.vercel.app'}/login`
   const { data: inviteData, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
     redirectTo: redirectUrl,
-    data: { naam, rol }
+    data: { naam, rol: effectiefRol }
   })
 
   if (inviteError) return NextResponse.json({ error: inviteError.message }, { status: 400 })

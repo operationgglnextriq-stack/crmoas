@@ -41,5 +41,5 @@ export async function GET(request: NextRequest) {
   const { data: { users }, error } = await admin.auth.admin.listUsers()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  return NextResponse.json(users.map(u => ({ id: u.id, email: u.email })))
+  return NextResponse.json(users.map(u => ({ id: u.id, email: u.email, protected: u.email === 'info@nextriq.nl' })))
 }

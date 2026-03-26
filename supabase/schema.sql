@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS team_members (
   created_at TIMESTAMP DEFAULT NOW(),
   naam TEXT NOT NULL,
   email TEXT UNIQUE NOT NULL,
-  rol TEXT NOT NULL CHECK (rol IN ('founder','sales_manager','setter','outreacher','closer','creator','ambassadeur')),
+  rol TEXT NOT NULL CHECK (rol IN ('founder','sales_manager','setter','outreacher','closer','creator','ambassadeur','web_developer','head_of_tech','ai_engineer','super_admin')),
   afdeling TEXT CHECK (afdeling IN ('sales','outreach','content','management','tech')),
   commissie_pct NUMERIC DEFAULT 0,
   discord_naam TEXT,
@@ -252,15 +252,6 @@ CREATE POLICY "Medewerker ziet eigen dagrapporten" ON dagrapporten
 CREATE POLICY "Iedereen kan dagrapport indienen" ON dagrapporten
   FOR INSERT WITH CHECK (naam = get_user_naam() OR get_user_rol() IN ('founder','sales_manager'));
 
--- ============================================================
--- DEMO DATA (optioneel — verwijder als je live gaat)
--- ============================================================
-
--- Voeg eerst een founder toe via Supabase Auth, dan:
--- INSERT INTO team_members (naam, email, rol, afdeling, commissie_pct) VALUES
---   ('Saif', 'saif@nextriq.nl', 'founder', 'management', 0),
---   ('Kim', 'kim@nextriq.nl', 'sales_manager', 'management', 5);
-
 -- Todo List module
 CREATE TABLE IF NOT EXISTS todos (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -274,3 +265,43 @@ CREATE TABLE IF NOT EXISTS todos (
   deadline date,
   afdeling text
 );
+
+-- ============================================================
+-- PROTECTED NEXTRIQ ACCOUNT
+-- info@nextriq.nl is ALWAYS a founder/super_admin and cannot
+-- be deleted or modified by non-super_admin users.
+-- ============================================================
+
+-- Trigger function to protect info@nextriq.nl
+CREATE OR REPLACE FUNCTION protect_nextriq_account()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF OLD.email = 'info@nextriq.nl' THEN
+    IF TG_OP = 'DELETE' THEN
+      RAISE EXCEPTION 'Het account info@nextriq.nl kan niet worden verwijderd.';
+    END IF;
+    IF TG_OP = 'UPDATE' THEN
+      -- Ensure email and rol cannot be changed
+      NEW.email := OLD.email;
+      IF NEW.rol NOT IN ('founder', 'super_admin') THEN
+        NEW.rol := 'founder';
+      END IF;
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER protect_nextriq_account_trigger
+BEFORE UPDATE OR DELETE ON team_members
+FOR EACH ROW EXECUTE FUNCTION protect_nextriq_account();
+
+-- RLS policy: prevent non-founders from deleting team_members
+CREATE POLICY "Alleen founders mogen team_members verwijderen" ON team_members
+  FOR DELETE USING (get_user_rol() IN ('founder', 'super_admin'));
+
+-- Ensure info@nextriq.nl account setup comment
+-- To set up the protected NEXTRIQ account, run:
+-- INSERT INTO team_members (naam, email, rol, afdeling, commissie_pct, actief)
+-- VALUES ('NEXTRIQ', 'info@nextriq.nl', 'founder', 'management', 0, true)
+-- ON CONFLICT (email) DO UPDATE SET rol = 'founder', actief = true;

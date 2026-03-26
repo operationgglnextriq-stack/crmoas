@@ -1,4 +1,4 @@
-export default function LoadingSpinner({ text = 'Laden...' }: { text?: string }) {
+export default function LoadingSpinner({ text = 'Загрузка...' }: { text?: string }) {
   return (
     <div className="flex items-center justify-center py-16">
       <div className="text-center">

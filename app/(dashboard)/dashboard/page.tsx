@@ -59,8 +59,8 @@ export default function DashboardPage() {
     return (
       <div className="card text-center py-16">
         <p className="text-3xl mb-3">⚠️</p>
-        <p className="text-lg font-bold text-[#1B2A4A] mb-2">Account niet gevonden</p>
-        <p className="text-sm text-gray-400">Je account is niet gekoppeld aan een teamlid. Neem contact op met de beheerder.</p>
+        <p className="text-lg font-bold text-[#1B2A4A] mb-2">Аккаунт не найден</p>
+        <p className="text-sm text-gray-400">Ваш аккаунт не связан с членом команды. Обратитесь к администратору.</p>
       </div>
     )
   }
@@ -83,22 +83,22 @@ export default function DashboardPage() {
         {/* Dagrapport status */}
         <div className={`p-4 rounded-xl border-l-4 ${todayReport ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-500'}`}>
           <p className="font-medium text-sm">
-            {todayReport ? '✅ Dagrapport vandaag ingediend' : '⚠️ Dagrapport nog NIET ingediend vandaag'}
+            {todayReport ? '✅ Дневной отчёт подан сегодня' : '⚠️ Дневной отчёт ещё НЕ подан сегодня'}
           </p>
           {!todayReport && (
             <a href="/dagrapporten" className="text-sm text-[#CC0000] underline mt-1 inline-block">
-              Indienen →
+              Подать →
             </a>
           )}
         </div>
 
         {/* Personal KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <KPICard title="Leads deze week" value={myLeads.length} icon="👥" color="navy" />
-          <KPICard title="Deals deze maand" value={myDeals.length} icon="💼" color="purple" />
-          <KPICard title="Outreach deze week" value={myOutreach.length} icon="📞" color="green" />
+          <KPICard title="Лиды на этой неделе" value={myLeads.length} icon="👥" color="navy" />
+          <KPICard title="Сделки за этот месяц" value={myDeals.length} icon="💼" color="purple" />
+          <KPICard title="Аутрич на этой неделе" value={myOutreach.length} icon="📞" color="green" />
           <KPICard
-            title="Omzet deze maand"
+            title="Выручка за месяц"
             value={`€${myDeals.reduce((s, d) => s + (d.deal_waarde ?? 0), 0).toLocaleString('nl-NL')}`}
             icon="💰"
             color="orange"
@@ -106,8 +106,8 @@ export default function DashboardPage() {
         </div>
 
         <div className="card">
-          <h3 className="font-semibold text-[#1B2A4A] mb-3">Welkom, {teamMember?.naam}!</h3>
-          <p className="text-gray-500 text-sm">Gebruik de navigatie links om leads, outreach of je pipeline te bekijken.</p>
+          <h3 className="font-semibold text-[#1B2A4A] mb-3">Добро пожаловать, {teamMember?.naam}!</h3>
+          <p className="text-gray-500 text-sm">Используйте навигацию слева для просмотра лидов, аутрича или пайплайна.</p>
         </div>
       </div>
     )
@@ -157,14 +157,14 @@ export default function DashboardPage() {
 
   // Deal counts per stage
   const dealStages = [
-    { key: 'call', label: '📞 Call', color: 'bg-blue-100' },
-    { key: 'offerte', label: '📄 Offerte', color: 'bg-purple-100' },
-    { key: 'onderhand', label: '🤝 Onderhand.', color: 'bg-yellow-100' },
-    { key: 'gesloten', label: '✅ Gesloten', color: 'bg-green-100' },
-    { key: 'betaald', label: '💰 Betaald', color: 'bg-green-200' },
-    { key: 'levering', label: '🔄 Levering', color: 'bg-orange-100' },
-    { key: 'opgeleverd', label: '🏁 Opgeleverd', color: 'bg-teal-100' },
-    { key: 'verloren', label: '❌ Verloren', color: 'bg-red-100' },
+    { key: 'call', label: '📞 Звонок', color: 'bg-blue-100' },
+    { key: 'offerte', label: '📄 Предложение', color: 'bg-purple-100' },
+    { key: 'onderhand', label: '🤝 Переговоры', color: 'bg-yellow-100' },
+    { key: 'gesloten', label: '✅ Закрыта', color: 'bg-green-100' },
+    { key: 'betaald', label: '💰 Оплачена', color: 'bg-green-200' },
+    { key: 'levering', label: '🔄 Доставка', color: 'bg-orange-100' },
+    { key: 'opgeleverd', label: '🏁 Завершена', color: 'bg-teal-100' },
+    { key: 'verloren', label: '❌ Потеряна', color: 'bg-red-100' },
   ]
 
   return (
@@ -172,16 +172,16 @@ export default function DashboardPage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
-          title="Pipeline waarde"
+          title="Стоимость пайплайна"
           value={`€${pipelineWaarde.toLocaleString('nl-NL')}`}
           icon="💼"
           color="navy"
-          subtitle="Alle open deals"
+          subtitle="Все открытые сделки"
         />
-        <KPICard title="Leads deze week" value={leads.length} icon="👥" color="purple" />
-        <KPICard title="Deals gesloten (maand)" value={geslotenDeals.length} icon="✅" color="green" />
+        <KPICard title="Лиды на этой неделе" value={leads.length} icon="👥" color="purple" />
+        <KPICard title="Закрытых сделок (за месяц)" value={geslotenDeals.length} icon="✅" color="green" />
         <KPICard
-          title="Openstaande commissies"
+          title="Открытые комиссии"
           value={`€${openCommissies.toLocaleString('nl-NL')}`}
           icon="💰"
           color="orange"
@@ -192,7 +192,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Leads per setter */}
         <div className="card">
-          <h3 className="font-semibold text-[#1B2A4A] mb-4">Leads per setter (week)</h3>
+          <h3 className="font-semibold text-[#1B2A4A] mb-4">Лиды по сеттерам (неделя)</h3>
           {setterData.length > 0 ? (
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={setterData}>
@@ -204,13 +204,13 @@ export default function DashboardPage() {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <p className="text-gray-400 text-sm py-8 text-center">Geen data deze week</p>
+            <p className="text-gray-400 text-sm py-8 text-center">Нет данных за эту неделю</p>
           )}
         </div>
 
         {/* Deals per closer */}
         <div className="card">
-          <h3 className="font-semibold text-[#1B2A4A] mb-4">Deals per closer (maand)</h3>
+          <h3 className="font-semibold text-[#1B2A4A] mb-4">Сделки по клоузерам (месяц)</h3>
           {closerData.length > 0 ? (
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={closerData}>
@@ -222,7 +222,7 @@ export default function DashboardPage() {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <p className="text-gray-400 text-sm py-8 text-center">Geen data deze maand</p>
+            <p className="text-gray-400 text-sm py-8 text-center">Нет данных за этот месяц</p>
           )}
         </div>
       </div>
@@ -231,7 +231,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Outreach per outreacher */}
         <div className="card">
-          <h3 className="font-semibold text-[#1B2A4A] mb-4">Outreach per outreacher (week)</h3>
+          <h3 className="font-semibold text-[#1B2A4A] mb-4">Аутрич по аутричерам (неделя)</h3>
           {outreachData.length > 0 ? (
             <ResponsiveContainer width="100%" height={180}>
               <BarChart data={outreachData}>
@@ -243,13 +243,13 @@ export default function DashboardPage() {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <p className="text-gray-400 text-sm py-8 text-center">Geen data deze week</p>
+            <p className="text-gray-400 text-sm py-8 text-center">Нет данных за эту неделю</p>
           )}
         </div>
 
         {/* Mini pipeline */}
         <div className="card">
-          <h3 className="font-semibold text-[#1B2A4A] mb-4">Pipeline overzicht</h3>
+          <h3 className="font-semibold text-[#1B2A4A] mb-4">Обзор пайплайна</h3>
           <div className="grid grid-cols-2 gap-2">
             {dealStages.map(stage => {
               const count = deals.filter(d => d.deal_status === stage.key).length
@@ -268,31 +268,31 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Leaderboard */}
         <div className="card">
-          <h3 className="font-semibold text-[#1B2A4A] mb-4">🏆 Leaderboard week</h3>
+          <h3 className="font-semibold text-[#1B2A4A] mb-4">🏆 Лидерборд недели</h3>
           <div className="space-y-4">
             <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Top setters</p>
+              <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Топ сеттеры</p>
               {setterData.sort((a, b) => b.leads - a.leads).slice(0, 3).map((s, i) => (
                 <div key={s.name} className="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
                   <span className="text-sm">
                     {i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'} {s.name}
                   </span>
-                  <span className="text-sm font-semibold text-[#6B3FA0]">{s.leads} leads</span>
+                  <span className="text-sm font-semibold text-[#6B3FA0]">{s.leads} лидов</span>
                 </div>
               ))}
-              {setterData.length === 0 && <p className="text-gray-400 text-xs">Geen data</p>}
+              {setterData.length === 0 && <p className="text-gray-400 text-xs">Нет данных</p>}
             </div>
             <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Top closers</p>
+              <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Топ клоузеры</p>
               {closerData.sort((a, b) => b.deals - a.deals).slice(0, 3).map((c, i) => (
                 <div key={c.name} className="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
                   <span className="text-sm">
                     {i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'} {c.name}
                   </span>
-                  <span className="text-sm font-semibold text-[#1B2A4A]">{c.deals} deals</span>
+                  <span className="text-sm font-semibold text-[#1B2A4A]">{c.deals} сделок</span>
                 </div>
               ))}
-              {closerData.length === 0 && <p className="text-gray-400 text-xs">Geen data</p>}
+              {closerData.length === 0 && <p className="text-gray-400 text-xs">Нет данных</p>}
             </div>
           </div>
         </div>
@@ -300,17 +300,17 @@ export default function DashboardPage() {
         {/* Marktdata signalen */}
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-[#1B2A4A]">📊 Marktdata signalen</h3>
-            <span className="badge bg-orange-100 text-orange-800">🚀 {productkansen} kansen</span>
+            <h3 className="font-semibold text-[#1B2A4A]">📊 Сигналы рынка</h3>
+            <span className="badge bg-orange-100 text-orange-800">🚀 {productkansen} возможностей</span>
           </div>
-          <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Top pijnpunten</p>
+          <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Топ болевых точек</p>
           {topPijnpunten.map(([pijnpunt, freq], i) => (
             <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
               <span className="text-sm text-gray-700 truncate flex-1 mr-3">{pijnpunt}</span>
               <span className="text-sm font-semibold text-[#6B3FA0]">×{freq}</span>
             </div>
           ))}
-          {topPijnpunten.length === 0 && <p className="text-gray-400 text-xs">Geen marktdata ingediend</p>}
+          {topPijnpunten.length === 0 && <p className="text-gray-400 text-xs">Нет данных рынка</p>}
         </div>
       </div>
     </div>

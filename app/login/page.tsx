@@ -20,7 +20,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
-      setError('Ongeldig e-mailadres of wachtwoord.')
+      setError('Неверный email или пароль.')
       setLoading(false)
       return
     }
@@ -40,7 +40,7 @@ export default function LoginPage() {
 
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <h2 className="text-xl font-semibold text-[#1B2A4A] mb-6">Inloggen</h2>
+          <h2 className="text-xl font-semibold text-[#1B2A4A] mb-6">Войти</h2>
 
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
@@ -50,7 +50,7 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="label">E-mailadres</label>
+              <label className="label">Эл. почта</label>
               <input
                 type="email"
                 value={email}
@@ -62,7 +62,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="label">Wachtwoord</label>
+              <label className="label">Пароль</label>
               <input
                 type="password"
                 value={password}
@@ -78,13 +78,13 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full btn-primary py-3 text-base mt-2 disabled:opacity-50"
             >
-              {loading ? 'Inloggen...' : 'Inloggen'}
+              {loading ? 'Вход...' : 'Войти'}
             </button>
           </form>
         </div>
 
         <p className="text-center text-white/30 text-xs mt-6">
-          © 2024 NEXTRIQ. Alle rechten voorbehouden.
+          © 2024 NEXTRIQ. Все права защищены.
         </p>
       </div>
     </div>

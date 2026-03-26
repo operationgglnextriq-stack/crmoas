@@ -75,7 +75,7 @@ export default function LeaderboardPage() {
               period === p ? 'bg-[#6B3FA0] text-white' : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'
             }`}
           >
-            {p === 'week' ? 'Deze week' : 'Deze maand'}
+            {p === 'week' ? 'Эта неделя' : 'Этот месяц'}
           </button>
         ))}
       </div>
@@ -83,8 +83,8 @@ export default function LeaderboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Top Setters */}
         <div className="card">
-          <h3 className="font-semibold text-[#1B2A4A] mb-4">👥 Top Setters</h3>
-          <p className="text-xs text-gray-400 mb-3">Leads ingevoerd</p>
+          <h3 className="font-semibold text-[#1B2A4A] mb-4">👥 Топ Сеттеры</h3>
+          <p className="text-xs text-gray-400 mb-3">Лидов добавлено</p>
           {topSetters.length > 0 ? (
             <div className="space-y-3">
               {topSetters.map(([naam, data], i) => (
@@ -95,7 +95,7 @@ export default function LeaderboardPage() {
                   </div>
                   <div className="text-right">
                     <span className="font-bold text-[#6B3FA0]">{data.leads}</span>
-                    <span className="text-xs text-gray-400 ml-1">leads</span>
+                    <span className="text-xs text-gray-400 ml-1">лидов</span>
                   </div>
                 </div>
               ))}
@@ -113,14 +113,14 @@ export default function LeaderboardPage() {
               </div>
             </div>
           ) : (
-            <p className="text-gray-400 text-sm py-6 text-center">Geen data</p>
+            <p className="text-gray-400 text-sm py-6 text-center">Нет данных</p>
           )}
         </div>
 
         {/* Top Closers */}
         <div className="card">
-          <h3 className="font-semibold text-[#1B2A4A] mb-4">💼 Top Closers</h3>
-          <p className="text-xs text-gray-400 mb-3">Omzet gegenereerd</p>
+          <h3 className="font-semibold text-[#1B2A4A] mb-4">💼 Топ Клоузеры</h3>
+          <p className="text-xs text-gray-400 mb-3">Сгенерированная выручка</p>
           {topClosers.length > 0 ? (
             <div className="space-y-3">
               {topClosers.map(([naam, data], i) => (
@@ -131,7 +131,7 @@ export default function LeaderboardPage() {
                   </div>
                   <div className="text-right">
                     <span className="font-bold text-[#1A7A3A]">€{data.omzet.toLocaleString('nl-NL')}</span>
-                    <p className="text-xs text-gray-400">{data.deals} deals</p>
+                    <p className="text-xs text-gray-400">{data.deals} сделок</p>
                   </div>
                 </div>
               ))}
@@ -149,14 +149,14 @@ export default function LeaderboardPage() {
               </div>
             </div>
           ) : (
-            <p className="text-gray-400 text-sm py-6 text-center">Geen data</p>
+            <p className="text-gray-400 text-sm py-6 text-center">Нет данных</p>
           )}
         </div>
 
         {/* Top Outreachers */}
         <div className="card">
-          <h3 className="font-semibold text-[#1B2A4A] mb-4">📞 Top Outreachers</h3>
-          <p className="text-xs text-gray-400 mb-3">Contacten benaderd</p>
+          <h3 className="font-semibold text-[#1B2A4A] mb-4">📞 Топ Аутричеры</h3>
+          <p className="text-xs text-gray-400 mb-3">Контактов охвачено</p>
           {topOutreachers.length > 0 ? (
             <div className="space-y-3">
               {topOutreachers.map(([naam, count], i) => (
@@ -167,7 +167,7 @@ export default function LeaderboardPage() {
                   </div>
                   <div className="text-right">
                     <span className="font-bold text-[#E67E22]">{count}</span>
-                    <span className="text-xs text-gray-400 ml-1">contacten</span>
+                    <span className="text-xs text-gray-400 ml-1">контактов</span>
                   </div>
                 </div>
               ))}
@@ -185,7 +185,7 @@ export default function LeaderboardPage() {
               </div>
             </div>
           ) : (
-            <p className="text-gray-400 text-sm py-6 text-center">Geen data</p>
+            <p className="text-gray-400 text-sm py-6 text-center">Нет данных</p>
           )}
         </div>
       </div>

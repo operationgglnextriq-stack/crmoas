@@ -13,30 +13,31 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { href: '/dashboard', icon: '🏠', label: 'Dashboard', roles: ['founder', 'sales_manager', 'setter', 'outreacher', 'closer', 'creator', 'ambassadeur', 'web_developer', 'head_of_tech', 'ai_engineer'] },
-  { href: '/leads', icon: '👥', label: 'Leads', roles: ['founder', 'sales_manager', 'setter'] },
-  { href: '/outreach', icon: '📞', label: 'Outreach', roles: ['founder', 'sales_manager', 'outreacher'] },
-  { href: '/pipeline', icon: '💼', label: 'Pipeline', roles: ['founder', 'sales_manager', 'closer', 'setter', 'creator', 'ambassadeur', 'web_developer', 'head_of_tech', 'ai_engineer'] },
-  { href: '/deals', icon: '📁', label: 'Deals', roles: ['founder', 'sales_manager', 'closer', 'web_developer', 'head_of_tech'] },
-  { href: '/marktdata', icon: '📊', label: 'Marktdata', roles: ['founder', 'sales_manager', 'setter', 'outreacher'] },
-  { href: '/dagrapporten', icon: '📋', label: 'Dagrapporten', roles: ['founder', 'sales_manager', 'setter', 'outreacher', 'closer'] },
-  { href: '/leaderboard', icon: '🏆', label: 'Leaderboard', roles: ['founder', 'sales_manager'] },
-  { href: '/commissies', icon: '💰', label: 'Commissies', roles: ['founder', 'sales_manager'] },
-  { href: '/team', icon: '⚙️', label: 'Team beheer', roles: ['founder', 'sales_manager'] },
-  { href: '/todo', icon: '📋', label: 'Todo List', roles: ['founder', 'sales_manager', 'web_developer', 'head_of_tech'] },
+  { href: '/dashboard', icon: '🏠', label: 'Дашборд', roles: ['founder', 'sales_manager', 'setter', 'outreacher', 'closer', 'creator', 'ambassadeur', 'web_developer', 'head_of_tech', 'ai_engineer', 'super_admin'] },
+  { href: '/leads', icon: '👥', label: 'Лиды', roles: ['founder', 'sales_manager', 'setter', 'super_admin'] },
+  { href: '/outreach', icon: '📞', label: 'Аутрич', roles: ['founder', 'sales_manager', 'outreacher', 'super_admin'] },
+  { href: '/pipeline', icon: '💼', label: 'Пайплайн', roles: ['founder', 'sales_manager', 'closer', 'setter', 'creator', 'ambassadeur', 'web_developer', 'head_of_tech', 'ai_engineer', 'super_admin'] },
+  { href: '/deals', icon: '📁', label: 'Сделки', roles: ['founder', 'sales_manager', 'closer', 'web_developer', 'head_of_tech', 'super_admin'] },
+  { href: '/marktdata', icon: '📊', label: 'Данные рынка', roles: ['founder', 'sales_manager', 'setter', 'outreacher', 'super_admin'] },
+  { href: '/dagrapporten', icon: '📋', label: 'Дневные отчёты', roles: ['founder', 'sales_manager', 'setter', 'outreacher', 'closer', 'super_admin'] },
+  { href: '/leaderboard', icon: '🏆', label: 'Лидерборд', roles: ['founder', 'sales_manager', 'super_admin'] },
+  { href: '/commissies', icon: '💰', label: 'Комиссии', roles: ['founder', 'sales_manager', 'super_admin'] },
+  { href: '/team', icon: '⚙️', label: 'Управление командой', roles: ['founder', 'sales_manager', 'super_admin'] },
+  { href: '/todo', icon: '📋', label: 'Список задач', roles: ['founder', 'sales_manager', 'web_developer', 'head_of_tech', 'super_admin'] },
 ]
 
 const rolLabels: Record<Rol, string> = {
-  founder: 'Founder',
+  founder: 'Franchise Owner',
   sales_manager: 'Team Manager',
   setter: 'Appointment Setter',
   outreacher: 'Cold Outreacher',
   closer: 'Closer',
   creator: 'Creator',
-  ambassadeur: 'Ambassadeur',
+  ambassadeur: 'Амбассадор',
   web_developer: 'Web Developer',
   head_of_tech: 'Head of Tech',
   ai_engineer: 'AI Engineer',
+  super_admin: 'Super Admin',
 }
 
 export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
@@ -111,10 +112,10 @@ export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; o
         <button
           onClick={handleSignOut}
           className="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm w-full"
-          title={collapsed ? 'Uitloggen' : undefined}
+          title={collapsed ? 'Выйти' : undefined}
         >
           <span>🚪</span>
-          {!collapsed && <span>Uitloggen</span>}
+          {!collapsed && <span>Выйти</span>}
         </button>
       </div>
     </aside>

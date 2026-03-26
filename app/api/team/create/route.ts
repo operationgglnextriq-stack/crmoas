@@ -35,6 +35,9 @@ export async function POST(request: NextRequest) {
   const body = await request.json()
   const { email, password, naam, rol, afdeling, commissie_pct, discord_naam } = body
 
+  // Protect info@nextriq.nl - always assign founder role
+  const effectiefRol = email === 'info@nextriq.nl' ? 'founder' : rol
+
   if (!email || !password || !naam || !rol) {
     return NextResponse.json({ error: 'Verplichte velden ontbreken' }, { status: 400 })
   }
@@ -56,7 +59,7 @@ export async function POST(request: NextRequest) {
   const { error: dbError } = await supabase.from('team_members').insert({
     naam,
     email,
-    rol,
+    rol: effectiefRol,
     afdeling: afdeling ?? null,
     commissie_pct: commissie_pct ?? 0,
     discord_naam: discord_naam ?? null,

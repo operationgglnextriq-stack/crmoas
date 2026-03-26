@@ -48,7 +48,7 @@ export function ConfirmModal({
   onConfirm,
   title,
   message,
-  confirmLabel = 'Verwijderen',
+  confirmLabel = 'Удалить',
   danger = true,
 }: {
   open: boolean
@@ -63,7 +63,7 @@ export function ConfirmModal({
     <Modal open={open} onClose={onClose} title={title} size="sm">
       <p className="text-gray-600 mb-6">{message}</p>
       <div className="flex gap-3 justify-end">
-        <button onClick={onClose} className="btn-secondary">Annuleren</button>
+        <button onClick={onClose} className="btn-secondary">Отмена</button>
         <button
           onClick={() => { onConfirm(); onClose() }}
           className={danger ? 'btn-danger' : 'btn-primary'}

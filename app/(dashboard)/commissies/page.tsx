@@ -16,9 +16,9 @@ export default function CommissiesPage() {
   const isManager = teamMember?.rol === 'founder' || teamMember?.rol === 'sales_manager'
 
   const ROL_LABELS: Record<string, string> = {
-    founder: 'Founder', sales_manager: 'Team Manager', setter: 'Appointment Setter',
+    founder: 'Franchise Owner', sales_manager: 'Team Manager', setter: 'Appointment Setter',
     outreacher: 'Cold Outreacher', closer: 'Closer', creator: 'Creator',
-    ambassadeur: 'Ambassadeur', web_developer: 'Web Developer',
+    ambassadeur: 'Амбассадор', web_developer: 'Web Developer',
     head_of_tech: 'Head of Tech', ai_engineer: 'AI Engineer',
   }
 
@@ -204,19 +204,19 @@ export default function CommissiesPage() {
 
   const statusBadge = (deal: Deal) =>
     deal.commissie_betaald
-      ? <span className="badge bg-green-100 text-green-700">✓ Uitbetaald</span>
-      : <span className="badge bg-orange-100 text-orange-700">⏳ Openstaand</span>
+      ? <span className="badge bg-green-100 text-green-700">✓ Выплачено</span>
+      : <span className="badge bg-orange-100 text-orange-700">⏳ Открытая</span>
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h2 className="text-lg font-bold text-[#1B2A4A]">
-          {isManager ? 'Commissies — Overzicht' : `Mijn commissies — ${naam}`}
+          {isManager ? 'Комиссии — Обзор' : `Мои комиссии — ${naam}`}
         </h2>
         {isManager && (
           <select className="input !w-52" value={selectedLid} onChange={e => setSelectedLid(e.target.value)}>
-            <option value="">Alle teamleden</option>
+            <option value="">Все участники</option>
             {leden.map(l => <option key={l.id} value={l.naam}>{l.naam}</option>)}
           </select>
         )}
@@ -225,19 +225,19 @@ export default function CommissiesPage() {
       {/* KPI cards */}
       <div className="grid grid-cols-3 gap-4">
         <div className="card !p-5 border-l-4 border-l-orange-400">
-          <p className="text-xs text-gray-500 mb-1">Openstaand</p>
+          <p className="text-xs text-gray-500 mb-1">Открытые</p>
           <p className="text-2xl font-bold text-orange-600">€{totaalOpen.toLocaleString('nl-NL')}</p>
-          <p className="text-xs text-gray-400 mt-1">Nog niet uitbetaald</p>
+          <p className="text-xs text-gray-400 mt-1">Ещё не выплачено</p>
         </div>
         <div className="card !p-5 border-l-4 border-l-green-500">
-          <p className="text-xs text-gray-500 mb-1">Uitbetaald</p>
+          <p className="text-xs text-gray-500 mb-1">Выплачено</p>
           <p className="text-2xl font-bold text-green-600">€{totaalBetaald.toLocaleString('nl-NL')}</p>
-          <p className="text-xs text-gray-400 mt-1">Totaal ontvangen</p>
+          <p className="text-xs text-gray-400 mt-1">Всего получено</p>
         </div>
         <div className="card !p-5 border-l-4 border-l-purple-500">
-          <p className="text-xs text-gray-500 mb-1">Recurring /maand</p>
+          <p className="text-xs text-gray-500 mb-1">Recurring /мес</p>
           <p className="text-2xl font-bold text-purple-600">€{totalRecurringMaand.toLocaleString('nl-NL')}</p>
-          <p className="text-xs text-gray-400 mt-1">Vaste terugkerende commissie</p>
+          <p className="text-xs text-gray-400 mt-1">Фиксированная recurring комиссия</p>
         </div>
       </div>
 
@@ -246,17 +246,17 @@ export default function CommissiesPage() {
         <>
           <div className="card !p-0 overflow-hidden">
             <div className="px-4 py-3 bg-gray-50 border-b">
-              <h3 className="font-semibold text-gray-700">Overzicht per teamlid</h3>
+              <h3 className="font-semibold text-gray-700">Обзор по участникам</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-gray-50 border-b">
-                    <th className="text-left px-4 py-3 font-semibold text-gray-700">Naam</th>
-                    <th className="text-left px-4 py-3 font-semibold text-gray-700">Rol</th>
-                    <th className="text-right px-4 py-3 font-semibold text-gray-700">Deals</th>
-                    <th className="text-right px-4 py-3 font-semibold text-orange-600">Openstaand</th>
-                    <th className="text-right px-4 py-3 font-semibold text-green-600">Uitbetaald</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-700">Имя</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-700">Роль</th>
+                    <th className="text-right px-4 py-3 font-semibold text-gray-700">Сделок</th>
+                    <th className="text-right px-4 py-3 font-semibold text-orange-600">Открытые</th>
+                    <th className="text-right px-4 py-3 font-semibold text-green-600">Выплачено</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -275,7 +275,7 @@ export default function CommissiesPage() {
                   ))}
                   {nietToegewezen.length > 0 && (
                     <tr className="border-b border-gray-100 bg-yellow-50/40">
-                      <td className="px-4 py-3 font-medium text-gray-500 italic" colSpan={2}>Niet toegewezen</td>
+                      <td className="px-4 py-3 font-medium text-gray-500 italic" colSpan={2}>Без назначения</td>
                       <td className="px-4 py-3 text-right text-gray-500">{nietToegewezen.length}</td>
                       <td className="px-4 py-3 text-right font-semibold text-orange-400">
                         €{nietToegewezen.filter(d => !d.commissie_betaald).reduce((s, d) => s + (d.deal_waarde ?? 0), 0).toLocaleString('nl-NL')}
@@ -284,7 +284,7 @@ export default function CommissiesPage() {
                     </tr>
                   )}
                   {managerOverzicht.length === 0 && (
-                    <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-400">Geen teamleden gevonden</td></tr>
+                    <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-400">Участники не найдены</td></tr>
                   )}
                 </tbody>
               </table>
@@ -294,21 +294,21 @@ export default function CommissiesPage() {
           {/* Alle gesloten deals */}
           <div className="card !p-0 overflow-hidden">
             <div className="px-4 py-3 bg-gray-50 border-b">
-              <h3 className="font-semibold text-gray-700">Alle gesloten deals ({gesloten.length})</h3>
+              <h3 className="font-semibold text-gray-700">Все закрытые сделки ({gesloten.length})</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-gray-50 border-b">
-                    <th className="text-left px-4 py-3 font-semibold text-gray-700">Bedrijf</th>
-                    <th className="text-right px-4 py-3 font-semibold text-gray-700">Waarde</th>
-                    <th className="text-left px-4 py-3 font-semibold text-gray-700">Status</th>
-                    <th className="text-left px-4 py-3 font-semibold text-gray-700">Setter</th>
-                    <th className="text-left px-4 py-3 font-semibold text-gray-700">Closer</th>
-                    <th className="text-right px-4 py-3 font-semibold text-purple-600">Manager comm.</th>
-                    <th className="text-right px-4 py-3 font-semibold text-gray-700">Totale comm.</th>
-                    <th className="text-left px-4 py-3 font-semibold text-gray-700">Comm. status</th>
-                    <th className="text-left px-4 py-3 font-semibold text-gray-700">Actie</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-700">Компания</th>
+                    <th className="text-right px-4 py-3 font-semibold text-gray-700">Стоимость</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-700">Статус</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-700">Сеттер</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-700">Клоузер</th>
+                    <th className="text-right px-4 py-3 font-semibold text-purple-600">Комиссия менеджера</th>
+                    <th className="text-right px-4 py-3 font-semibold text-gray-700">Итого комиссия</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-700">Статус комиссии</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-700">Действие</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -332,7 +332,7 @@ export default function CommissiesPage() {
                               onClick={() => handleUitbetalen(deal.id)}
                               className="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 transition-colors"
                             >
-                              ✓ Uitbetalen
+                              ✓ Выплатить
                             </button>
                           )}
                         </td>
@@ -340,7 +340,7 @@ export default function CommissiesPage() {
                     )
                   })}
                   {gesloten.length === 0 && (
-                    <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400">Geen gesloten deals</td></tr>
+                    <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400">Нет закрытых сделок</td></tr>
                   )}
                 </tbody>
               </table>
@@ -351,15 +351,15 @@ export default function CommissiesPage() {
           {nietToegewezen.length > 0 && (
             <div className="card !p-0 overflow-hidden">
               <div className="px-4 py-3 bg-yellow-50 border-b border-yellow-200">
-                <h3 className="font-semibold text-yellow-800">Niet toegewezen deals ({nietToegewezen.length})</h3>
+                <h3 className="font-semibold text-yellow-800">Сделки без назначения ({nietToegewezen.length})</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50 border-b">
-                      <th className="text-left px-4 py-3 font-semibold text-gray-700">Bedrijfsnaam</th>
-                      <th className="text-right px-4 py-3 font-semibold text-gray-700">Deal waarde</th>
-                      <th className="text-left px-4 py-3 font-semibold text-gray-700">Status</th>
+                      <th className="text-left px-4 py-3 font-semibold text-gray-700">Компания</th>
+                      <th className="text-right px-4 py-3 font-semibold text-gray-700">Стоимость сделки</th>
+                      <th className="text-left px-4 py-3 font-semibold text-gray-700">Статус</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -382,14 +382,14 @@ export default function CommissiesPage() {
       {/* Sales manager commissie sectie */}
       {(selectedLid || !isManager) && currentLid?.rol === 'sales_manager' && (
         <div className="card !p-5 border-l-4 border-l-purple-500">
-          <p className="text-xs text-gray-500 mb-1 font-semibold uppercase tracking-wide">Manager commissie (5% over alle deals)</p>
+          <p className="text-xs text-gray-500 mb-1 font-semibold uppercase tracking-wide">Комиссия менеджера (5% от всех сделок)</p>
           <div className="flex gap-6 mt-2">
             <div>
-              <p className="text-xs text-gray-400">Openstaand</p>
+              <p className="text-xs text-gray-400">Открытые</p>
               <p className="text-xl font-bold text-orange-600">€{salesManagerCommOpen.toLocaleString('nl-NL')}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-400">Uitbetaald</p>
+              <p className="text-xs text-gray-400">Выплачено</p>
               <p className="text-xl font-bold text-green-600">€{salesManagerCommBetaald.toLocaleString('nl-NL')}</p>
             </div>
           </div>
@@ -400,21 +400,21 @@ export default function CommissiesPage() {
       <div className="card !p-0 overflow-hidden">
         <div className="px-4 py-3 bg-purple-50 border-b border-purple-100 flex items-center gap-2">
           <span>🔄</span>
-          <h3 className="font-semibold text-purple-800">Recurring Commissies — Maandoverzicht</h3>
+          <h3 className="font-semibold text-purple-800">Recurring Комиссии — Обзор месяца</h3>
           <span className="ml-auto text-sm text-purple-600 font-medium">
-            Totaal/maand: €{totalRecurringMaand.toLocaleString('nl-NL')}
+            Итого/мес: €{totalRecurringMaand.toLocaleString('nl-NL')}
           </span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b">
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Bedrijf</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Product</th>
-                <th className="text-right px-4 py-3 font-semibold text-gray-700">Maandbedrag</th>
-                <th className="text-right px-4 py-3 font-semibold text-purple-700">Commissie/maand</th>
-                <th className="text-right px-4 py-3 font-semibold text-gray-500">Jaarlijks</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Rol</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Компания</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Продукт</th>
+                <th className="text-right px-4 py-3 font-semibold text-gray-700">Сумма/мес</th>
+                <th className="text-right px-4 py-3 font-semibold text-purple-700">Комиссия/мес</th>
+                <th className="text-right px-4 py-3 font-semibold text-gray-500">В год</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Роль</th>
               </tr>
             </thead>
             <tbody>
@@ -429,7 +429,7 @@ export default function CommissiesPage() {
                 </tr>
               ))}
               {recurringDeals.length === 0 && (
-                <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">Geen recurring deals</td></tr>
+                <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">Нет recurring сделок</td></tr>
               )}
             </tbody>
           </table>
@@ -439,10 +439,10 @@ export default function CommissiesPage() {
       {(selectedLid || !isManager) && (
         <div className="card !p-0 overflow-hidden">
           <div className="px-4 py-3 bg-gray-50 border-b flex items-center justify-between">
-            <h3 className="font-semibold text-gray-700">Deals — {filterNaam}</h3>
+            <h3 className="font-semibold text-gray-700">Сделки — {filterNaam}</h3>
             {isManager && selectedLid && (
               <button onClick={() => setSelectedLid('')} className="text-xs text-gray-500 hover:text-gray-700">
-                ← Terug naar overzicht
+                ← Назад к обзору
               </button>
             )}
           </div>
@@ -450,18 +450,18 @@ export default function CommissiesPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 border-b">
-                  <th className="text-left px-4 py-3 font-semibold text-gray-700">Bedrijf</th>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-700">Rol</th>
-                  <th className="text-right px-4 py-3 font-semibold text-gray-700">Deal waarde</th>
-                  <th className="text-right px-4 py-3 font-semibold text-gray-700">Commissie</th>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-700">Status</th>
-                  {isManager && <th className="text-left px-4 py-3 font-semibold text-gray-700">Actie</th>}
+                  <th className="text-left px-4 py-3 font-semibold text-gray-700">Компания</th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-700">Роль</th>
+                  <th className="text-right px-4 py-3 font-semibold text-gray-700">Стоимость</th>
+                  <th className="text-right px-4 py-3 font-semibold text-gray-700">Комиссия</th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-700">Статус</th>
+                  {isManager && <th className="text-left px-4 py-3 font-semibold text-gray-700">Действие</th>}
                 </tr>
               </thead>
               <tbody>
                 {gefilterd.map((deal, i) => {
                   const n = filterNaam ?? ''
-                  const rol = deal.closer_naam === n ? 'Closer' : deal.setter_naam === n ? 'Setter' : deal.creator_naam === n ? 'Creator' : deal.ambassadeur_naam === n ? 'Ambassadeur' : 'Overig'
+                  const rol = deal.closer_naam === n ? 'Клоузер' : deal.setter_naam === n ? 'Сеттер' : deal.creator_naam === n ? 'Creator' : deal.ambassadeur_naam === n ? 'Амбассадор' : 'Прочее'
                   const comm = getCommissie(deal, n)
                   return (
                     <tr key={deal.id} className={`border-b border-gray-100 hover:bg-gray-50 ${i % 2 === 1 ? 'bg-gray-50/50' : ''}`}>
@@ -477,7 +477,7 @@ export default function CommissiesPage() {
                               onClick={() => handleUitbetalen(deal.id)}
                               className="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 transition-colors"
                             >
-                              ✓ Uitbetalen
+                              ✓ Выплатить
                             </button>
                           )}
                         </td>
@@ -488,7 +488,7 @@ export default function CommissiesPage() {
                 {gefilterd.length === 0 && (
                   <tr>
                     <td colSpan={isManager ? 6 : 5} className="px-4 py-8 text-center text-gray-400">
-                      Geen afgesloten deals gevonden
+                      Закрытые сделки не найдены
                     </td>
                   </tr>
                 )}

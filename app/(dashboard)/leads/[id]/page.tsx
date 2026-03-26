@@ -11,7 +11,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { format } from 'date-fns'
-import { nl } from 'date-fns/locale'
+import { ru } from 'date-fns/locale'
 
 export default function LeadDetailPage({ params }: { params: { id: string } }) {
   const [lead, setLead] = useState<Lead | null>(null)
@@ -38,9 +38,9 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
   }
 
   const STATUS_LABELS: Record<string, string> = {
-    call: 'Call', offerte: 'Offerte', onderhand: 'Onderhandeling',
-    gesloten: 'Gesloten', betaald: 'Betaald', levering: 'Levering',
-    opgeleverd: 'Opgeleverd', verloren: 'Verloren',
+    call: 'Звонок', offerte: 'Предложение', onderhand: 'Переговоры',
+    gesloten: 'Закрыта', betaald: 'Оплачена', levering: 'Доставка',
+    opgeleverd: 'Завершена', verloren: 'Потеряна',
   }
 
   const STATUS_COLORS: Record<string, string> = {
@@ -98,7 +98,7 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
       setDoorSturenSuccess(true)
       setTimeout(() => setDoorSturenSuccess(false), 3000)
     } else {
-      alert('Mislukt — deal kon niet aangemaakt worden')
+      alert('Ошибка — не удалось создать сделку')
     }
   }
 
@@ -137,72 +137,72 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
     })
     const data = await res.json()
     if (!res.ok) {
-      alert('Verwijderen mislukt: ' + (data.error || 'onbekende fout'))
+      alert('Ошибка удаления: ' + (data.error || 'onbekende fout'))
       return
     }
     router.push('/leads')
   }
 
   if (loading) return <LoadingSpinner />
-  if (!lead) return <div className="card text-center text-gray-400 py-12">Lead niet gevonden</div>
+  if (!lead) return <div className="card text-center text-gray-400 py-12">Лид не найден</div>
 
   return (
     <div className="max-w-3xl space-y-6">
       <div className="flex items-center gap-4 flex-wrap">
-        <Link href="/leads" className="text-sm text-gray-500 hover:text-[#1B2A4A]">← Terug</Link>
+        <Link href="/leads" className="text-sm text-gray-500 hover:text-[#1B2A4A]">← Назад</Link>
         <h2 className="text-xl font-bold text-[#1B2A4A]">{lead.bedrijfsnaam}</h2>
         <BANTBadge score={calcBANT(lead)} />
         <KwalificatieBadge status={lead.kwalificatiestatus} />
-        {lead.is_duplicaat && <span className="badge bg-orange-100 text-orange-800">⚠️ Duplicaat</span>}
+        {lead.is_duplicaat && <span className="badge bg-orange-100 text-orange-800">⚠️ Дубликат</span>}
         <div className="ml-auto flex gap-2">
-          <button onClick={() => setShowEdit(true)} className="btn-primary text-sm">✏️ Bewerken</button>
-          <button onClick={() => setShowDelete(true)} className="text-sm px-3 py-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100">🗑️ Verwijderen</button>
+          <button onClick={() => setShowEdit(true)} className="btn-primary text-sm">✏️ Изменить</button>
+          <button onClick={() => setShowDelete(true)} className="text-sm px-3 py-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100">🗑️ Удалить</button>
           {canDoorSturen && (
             <button
               onClick={handleDoorSturen}
               disabled={doorSturing}
               className="text-sm px-3 py-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 disabled:opacity-50"
             >
-              {doorSturing ? 'Bezig...' : '📤 Naar pipeline'}
+              {doorSturing ? 'Загрузка...' : '📤 В пайплайн'}
             </button>
           )}
           {doorSturenSuccess && (
-            <span className="text-sm text-green-600 font-medium">✅ Deal aangemaakt!</span>
+            <span className="text-sm text-green-600 font-medium">✅ Сделка создана!</span>
           )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="card space-y-3">
-          <h3 className="font-semibold text-gray-700 border-b pb-2">Bedrijfsinfo</h3>
+          <h3 className="font-semibold text-gray-700 border-b pb-2">Информация о компании</h3>
           <Row label="Website" value={lead.website} />
-          <Row label="Contactpersoon" value={lead.contactpersoon} />
-          <Row label="Telefoon" value={lead.telefoonnummer} />
+          <Row label="Контактное лицо" value={lead.contactpersoon} />
+          <Row label="Телефон" value={lead.telefoonnummer} />
           <Row label="E-mail" value={lead.emailadres} />
-          <Row label="Sector" value={lead.sector} />
-          <Row label="Kanaal" value={lead.kanaal?.replace(/_/g, ' ')} />
-          <Row label="Setter" value={lead.setter_naam} />
-          <Row label="Datum" value={format(new Date(lead.created_at), 'd MMMM yyyy', { locale: nl })} />
+          <Row label="Сектор" value={lead.sector} />
+          <Row label="Канал" value={lead.kanaal?.replace(/_/g, ' ')} />
+          <Row label="Сеттер" value={lead.setter_naam} />
+          <Row label="Дата" value={format(new Date(lead.created_at), 'd MMMM yyyy', { locale: ru })} />
         </div>
         <div className="card space-y-3">
-          <h3 className="font-semibold text-gray-700 border-b pb-2">BANT Kwalificatie</h3>
+          <h3 className="font-semibold text-gray-700 border-b pb-2">BANT Квалификация</h3>
           <Row label="Budget" value={lead.bant_budget} />
-          <Row label="Autoriteit" value={lead.bant_autoriteit} />
-          <Row label="Behoefte" value={lead.bant_need} />
+          <Row label="Полномочия" value={lead.bant_autoriteit} />
+          <Row label="Потребность" value={lead.bant_need} />
           <Row label="Timing" value={lead.bant_timing} />
-          <Row label="Pijnpunt" value={lead.pijnpunt} />
+          <Row label="Болевая точка" value={lead.pijnpunt} />
         </div>
         <div className="card space-y-3">
-          <h3 className="font-semibold text-gray-700 border-b pb-2">Product & Sales</h3>
-          <Row label="Product interesse" value={lead.product_interesse?.replace(/_/g, ' ')} />
-          <Row label="Closer" value={lead.closer_naam} />
-          <Row label="Datum call" value={lead.datum_call ? format(new Date(lead.datum_call), 'd MMM yyyy HH:mm', { locale: nl }) : '-'} />
-          <Row label="Ambassadeur" value={lead.ambassadeur} />
+          <h3 className="font-semibold text-gray-700 border-b pb-2">Продукт и продажи</h3>
+          <Row label="Интерес к продукту" value={lead.product_interesse?.replace(/_/g, ' ')} />
+          <Row label="Клоузер" value={lead.closer_naam} />
+          <Row label="Дата звонка" value={lead.datum_call ? format(new Date(lead.datum_call), 'd MMM yyyy HH:mm', { locale: ru }) : '-'} />
+          <Row label="Амбассадор" value={lead.ambassadeur} />
           <Row label="Creator" value={lead.creator} />
         </div>
         {lead.notities && (
           <div className="card">
-            <h3 className="font-semibold text-gray-700 border-b pb-2 mb-3">Notities</h3>
+            <h3 className="font-semibold text-gray-700 border-b pb-2 mb-3">Заметки</h3>
             <p className="text-sm text-gray-600 whitespace-pre-wrap">{lead.notities}</p>
           </div>
         )}
@@ -213,18 +213,18 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
       {/* Deals / Producten sectie */}
       <div className="card space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-[#1B2A4A]">💼 Deals & Producten</h3>
+          <h3 className="font-semibold text-[#1B2A4A]">💼 Сделки и продукты</h3>
           {canDoorSturen && (
             <button
               onClick={() => setShowDealModal(true)}
               className="text-sm px-3 py-2 rounded-lg bg-[#1B2A4A] text-white hover:bg-[#253a68]"
             >
-              + Product toevoegen
+              + Добавить продукт
             </button>
           )}
         </div>
         {deals.length === 0 ? (
-          <p className="text-sm text-gray-400 py-4 text-center">Nog geen deals gekoppeld aan deze lead</p>
+          <p className="text-sm text-gray-400 py-4 text-center">К этому лиду ещё не привязано сделок</p>
         ) : (
           <div className="space-y-2">
             {deals.map(deal => (
@@ -234,10 +234,10 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
                     {STATUS_LABELS[deal.deal_status] ?? deal.deal_status}
                   </span>
                   <span className="text-sm font-medium text-[#1B2A4A]">
-                    {PRODUCT_LABELS[deal.product ?? ''] ?? deal.product ?? 'Onbekend product'}
+                    {PRODUCT_LABELS[deal.product ?? ''] ?? deal.product ?? 'Неизвестный продукт'}
                   </span>
                   {deal.deal_waarde && (
-                    <span className="text-sm text-gray-500">€{deal.deal_waarde.toLocaleString('nl-NL')}</span>
+                    <span className="text-sm text-gray-500">€{deal.deal_waarde.toLocaleString('ru-RU')}</span>
                   )}
                   {deal.recurring && (
                     <span className="badge bg-purple-100 text-purple-700">🔄 Recurring</span>
@@ -252,30 +252,30 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
         )}
       </div>
 
-      <Modal open={showEdit} onClose={() => setShowEdit(false)} title="Lead bewerken" size="lg">
+      <Modal open={showEdit} onClose={() => setShowEdit(false)} title="Изменить лид" size="lg">
         <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
           <div className="grid grid-cols-2 gap-4">
-            <div><label className="label">Bedrijfsnaam *</label>
+            <div><label className="label">Название компании *</label>
               <input className="input" value={form.bedrijfsnaam ?? ''} onChange={e => setForm(f => ({ ...f, bedrijfsnaam: e.target.value }))} /></div>
             <div><label className="label">Website</label>
               <input className="input" value={form.website ?? ''} onChange={e => setForm(f => ({ ...f, website: e.target.value }))} /></div>
-            <div><label className="label">Contactpersoon</label>
+            <div><label className="label">Контактное лицо</label>
               <input className="input" value={form.contactpersoon ?? ''} onChange={e => setForm(f => ({ ...f, contactpersoon: e.target.value }))} /></div>
-            <div><label className="label">Telefoon</label>
+            <div><label className="label">Телефон</label>
               <input className="input" value={form.telefoonnummer ?? ''} onChange={e => setForm(f => ({ ...f, telefoonnummer: e.target.value }))} /></div>
             <div><label className="label">E-mail</label>
               <input className="input" value={form.emailadres ?? ''} onChange={e => setForm(f => ({ ...f, emailadres: e.target.value }))} /></div>
-            <div><label className="label">Sector</label>
+            <div><label className="label">Сектор</label>
               <select className="input" value={form.sector ?? ''} onChange={e => setForm(f => ({ ...f, sector: e.target.value as Sector }))}>
                 <option value="">-</option>
                 {['ecommerce','horeca','zakelijk','zorg','bouw','retail','tech','schoonmaak','finance','overig'].map(s => <option key={s} value={s}>{s}</option>)}
               </select></div>
-            <div><label className="label">Kanaal</label>
+            <div><label className="label">Канал</label>
               <select className="input" value={form.kanaal ?? ''} onChange={e => setForm(f => ({ ...f, kanaal: e.target.value as Kanaal }))}>
                 <option value="">-</option>
                 {['instagram_dm','tiktok','linkedin','biolink','outbound','referral','checkout','whatsapp','web_form'].map(k => <option key={k} value={k}>{k.replace(/_/g,' ')}</option>)}
               </select></div>
-            <div><label className="label">Kwalificatiestatus</label>
+            <div><label className="label">Статус квалификации</label>
               <select className="input" value={form.kwalificatiestatus ?? ''} onChange={e => setForm(f => ({ ...f, kwalificatiestatus: e.target.value as KwalificatieStatus }))}>
                 {['warm','followup_1','followup_2','followup_3','geboekt','niet','afwijzing'].map(s => <option key={s} value={s}>{s}</option>)}
               </select></div>
@@ -288,7 +288,7 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
                   <option value="">-</option>
                   {['ja','onduidelijk','nee'].map(v => <option key={v} value={v}>{v}</option>)}
                 </select></div>
-              <div><label className="label">Autoriteit</label>
+              <div><label className="label">Полномочия</label>
                 <select className="input" value={form.bant_autoriteit ?? ''} onChange={e => setForm(f => ({ ...f, bant_autoriteit: e.target.value as BantAutoriteit }))}>
                   <option value="">-</option>
                   {['beslisser','indirect','geen'].map(v => <option key={v} value={v}>{v}</option>)}
@@ -298,32 +298,32 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
                   <option value="">-</option>
                   {['1maand','3maanden','6maanden','geen'].map(v => <option key={v} value={v}>{v}</option>)}
                 </select></div>
-              <div><label className="label">Product interesse</label>
+              <div><label className="label">Интерес к продукту</label>
                 <select className="input" value={form.product_interesse ?? ''} onChange={e => setForm(f => ({ ...f, product_interesse: e.target.value as ProductInteresse }))}>
                   <option value="">-</option>
                   {['website','ai_scan','ai_agency','ink','community','onbekend'].map(v => <option key={v} value={v}>{v.replace(/_/g,' ')}</option>)}
                 </select></div>
             </div>
-            <div className="mt-3"><label className="label">Pijnpunt</label>
+            <div className="mt-3"><label className="label">Болевая точка</label>
               <input className="input" value={form.pijnpunt ?? ''} onChange={e => setForm(f => ({ ...f, pijnpunt: e.target.value }))} /></div>
-            <div className="mt-3"><label className="label">Behoefte (BANT N)</label>
+            <div className="mt-3"><label className="label">Потребность (BANT N)</label>
               <input className="input" value={form.bant_need ?? ''} onChange={e => setForm(f => ({ ...f, bant_need: e.target.value }))} /></div>
           </div>
           <div className="border-t pt-4">
             <p className="text-xs font-semibold text-gray-500 uppercase mb-3">Sales</p>
             <div className="grid grid-cols-2 gap-4">
-              <div><label className="label">Closer</label>
+              <div><label className="label">Клоузер</label>
                 <input className="input" value={form.closer_naam ?? ''} onChange={e => setForm(f => ({ ...f, closer_naam: e.target.value }))} /></div>
-              <div><label className="label">Datum call</label>
+              <div><label className="label">Дата звонка</label>
                 <input type="datetime-local" className="input" value={form.datum_call ? form.datum_call.slice(0,16) : ''} onChange={e => setForm(f => ({ ...f, datum_call: e.target.value }))} /></div>
             </div>
           </div>
-          <div><label className="label">Notities</label>
+          <div><label className="label">Заметки</label>
             <textarea className="input" rows={3} value={form.notities ?? ''} onChange={e => setForm(f => ({ ...f, notities: e.target.value }))} /></div>
           <div className="flex gap-3 justify-end pt-2 border-t">
-            <button onClick={() => setShowEdit(false)} className="btn-secondary">Annuleren</button>
+            <button onClick={() => setShowEdit(false)} className="btn-secondary">Отмена</button>
             <button onClick={handleSave} disabled={saving} className="btn-primary disabled:opacity-50">
-              {saving ? 'Opslaan...' : 'Wijzigingen opslaan'}
+              {saving ? 'Сохранение...' : 'Сохранить изменения'}
             </button>
           </div>
         </div>
@@ -331,12 +331,12 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
 
 
       {/* Deal aanmaak modal */}
-      <Modal open={showDealModal} onClose={() => setShowDealModal(false)} title="Product toevoegen">
+      <Modal open={showDealModal} onClose={() => setShowDealModal(false)} title="Добавить продукт">
         <div className="space-y-4">
           <div>
-            <label className="label">Product</label>
+            <label className="label">Продукт</label>
             <select className="input" value={dealForm.product ?? ''} onChange={e => setDealForm(f => ({...f, product: e.target.value as Deal['product']}))}>
-              <option value="">- kies product -</option>
+              <option value="">- выберите продукт -</option>
               <option value="website_std">Website Standaard</option>
               <option value="website_maat">Website Maatwerk</option>
               <option value="hosting">Hosting</option>
@@ -350,42 +350,42 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="label">Deal waarde (€)</label>
+              <label className="label">Стоимость сделки (€)</label>
               <input type="number" className="input" value={dealForm.deal_waarde ?? ''} onChange={e => setDealForm(f => ({...f, deal_waarde: Number(e.target.value)}))} />
             </div>
             <div>
-              <label className="label">Status</label>
+              <label className="label">Статус</label>
               <select className="input" value={dealForm.deal_status ?? 'call'} onChange={e => setDealForm(f => ({...f, deal_status: e.target.value as Deal['deal_status']}))}>
-                <option value="call">Call</option>
-                <option value="offerte">Offerte</option>
-                <option value="onderhand">Onderhandeling</option>
-                <option value="gesloten">Gesloten</option>
-                <option value="betaald">Betaald</option>
-                <option value="levering">Levering</option>
-                <option value="opgeleverd">Opgeleverd</option>
-                <option value="verloren">Verloren</option>
+                <option value="call">Звонок</option>
+                <option value="offerte">Предложение</option>
+                <option value="onderhand">Переговоры</option>
+                <option value="gesloten">Закрыта</option>
+                <option value="betaald">Оплачена</option>
+                <option value="levering">Доставка</option>
+                <option value="opgeleverd">Завершена</option>
+                <option value="verloren">Потеряна</option>
               </select>
             </div>
           </div>
           <div>
-            <label className="label">Closer</label>
-            <input className="input" placeholder="Naam closer" value={dealForm.closer_naam ?? ''} onChange={e => setDealForm(f => ({...f, closer_naam: e.target.value || null}))} />
+            <label className="label">Клоузер</label>
+            <input className="input" placeholder="Имя клоузера" value={dealForm.closer_naam ?? ''} onChange={e => setDealForm(f => ({...f, closer_naam: e.target.value || null}))} />
           </div>
           <div className="flex items-center gap-2">
             <input type="checkbox" id="recurring-deal" checked={dealForm.recurring ?? false} onChange={e => setDealForm(f => ({...f, recurring: e.target.checked}))} className="w-4 h-4 accent-[#6B3FA0]" />
-            <label htmlFor="recurring-deal" className="text-sm text-gray-700">Recurring deal (maandelijks terugkerend)</label>
+            <label htmlFor="recurring-deal" className="text-sm text-gray-700">Recurring сделка (ежемесячно)</label>
           </div>
           {dealForm.recurring && (
             <div>
-              <label className="label">Maandbedrag (€)</label>
+              <label className="label">Сумма/мес (€)</label>
               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              <input type="number" className="input" placeholder="bijv. 50" value={(dealForm as any).recurring_maand_bedrag ?? ''} onChange={e => setDealForm(f => ({...f, recurring_maand_bedrag: Number(e.target.value) || null}))} />
+              <input type="number" className="input" placeholder="напр. 50" value={(dealForm as any).recurring_maand_bedrag ?? ''} onChange={e => setDealForm(f => ({...f, recurring_maand_bedrag: Number(e.target.value) || null}))} />
             </div>
           )}
           <div className="flex gap-3 pt-2 border-t">
-            <button onClick={() => setShowDealModal(false)} className="btn-secondary flex-1">Annuleren</button>
+            <button onClick={() => setShowDealModal(false)} className="btn-secondary flex-1">Отмена</button>
             <button onClick={handleDealSave} disabled={dealSaving} className="btn-primary flex-1 disabled:opacity-50">
-              {dealSaving ? 'Opslaan...' : 'Deal aanmaken'}
+              {dealSaving ? 'Сохранение...' : 'Создать сделку'}
             </button>
           </div>
         </div>
@@ -395,9 +395,9 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
         open={showDelete}
         onClose={() => setShowDelete(false)}
         onConfirm={handleDelete}
-        title="Lead verwijderen"
-        message={`Weet je zeker dat je "${lead.bedrijfsnaam}" permanent wilt verwijderen?`}
-        confirmLabel="Verwijderen"
+        title="Удалить лид"
+        message={`Вы уверены, что хотите навсегда удалить "${lead.bedrijfsnaam}"?`}
+        confirmLabel="Удалить"
         danger
       />
     </div>

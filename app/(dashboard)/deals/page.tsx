@@ -7,14 +7,14 @@ import { Deal, DealStatus } from '@/types'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
 const STATUS_LABELS: Record<DealStatus, string> = {
-  call: '📞 Call',
-  offerte: '📄 Offerte',
-  onderhand: '🤝 Onderhandeling',
-  gesloten: '✅ Gesloten',
-  betaald: '💰 Betaald',
-  levering: '🔄 Levering',
-  opgeleverd: '🏁 Opgeleverd',
-  verloren: '❌ Verloren',
+  call: '📞 Звонок',
+  offerte: '📄 Предложение',
+  onderhand: '🤝 Переговоры',
+  gesloten: '✅ Закрыта',
+  betaald: '💰 Оплачена',
+  levering: '🔄 Доставка',
+  opgeleverd: '🏁 Завершена',
+  verloren: '❌ Потеряна',
 }
 
 const STATUS_COLORS: Record<DealStatus, string> = {
@@ -76,7 +76,7 @@ export default function DealsPage() {
     .reduce((s, d) => s + (d.deal_waarde ?? 0), 0)
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Weet je zeker dat je deze deal wilt verwijderen?')) return
+    if (!confirm('Вы уверены, что хотите удалить эту сделку?')) return
     setDeletingId(id)
     await apiFetch('/api/crud', {
       method: 'DELETE',
@@ -90,13 +90,13 @@ export default function DealsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h2 className="text-lg font-bold text-[#1B2A4A]">💼 Alle Deals</h2>
+        <h2 className="text-lg font-bold text-[#1B2A4A]">💼 Все сделки</h2>
         <select
           className="input !w-48"
           value={filterStatus}
           onChange={e => setFilterStatus(e.target.value as DealStatus | '')}
         >
-          <option value="">Alle statussen</option>
+          <option value="">Все статусы</option>
           {(Object.keys(STATUS_LABELS) as DealStatus[]).map(s => (
             <option key={s} value={s}>{STATUS_LABELS[s]}</option>
           ))}
@@ -106,39 +106,39 @@ export default function DealsPage() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         <div className="card !p-5 border-l-4 border-l-[#1B2A4A]">
-          <p className="text-xs text-gray-500 mb-1">Pipeline waarde</p>
+          <p className="text-xs text-gray-500 mb-1">Стоимость пайплайна</p>
           <p className="text-2xl font-bold text-[#1B2A4A]">€{pipelineWaarde.toLocaleString('nl-NL')}</p>
-          <p className="text-xs text-gray-400 mt-1">Actieve deals</p>
+          <p className="text-xs text-gray-400 mt-1">Активные сделки</p>
         </div>
         <div className="card !p-5 border-l-4 border-l-green-500">
-          <p className="text-xs text-gray-500 mb-1">Gesloten deals</p>
+          <p className="text-xs text-gray-500 mb-1">Закрытые сделки</p>
           <p className="text-2xl font-bold text-green-600">{aantalGesloten}</p>
-          <p className="text-xs text-gray-400 mt-1">Gesloten / betaald / opgeleverd</p>
+          <p className="text-xs text-gray-400 mt-1">Закрыты / оплачены / завершены</p>
         </div>
         <div className="card !p-5 border-l-4 border-l-[#6B3FA0]">
-          <p className="text-xs text-gray-500 mb-1">Totale omzet</p>
+          <p className="text-xs text-gray-500 mb-1">Общая выручка</p>
           <p className="text-2xl font-bold text-[#6B3FA0]">€{totaleOmzet.toLocaleString('nl-NL')}</p>
-          <p className="text-xs text-gray-400 mt-1">Gesloten + betaald + opgeleverd</p>
+          <p className="text-xs text-gray-400 mt-1">Закрыты + оплачены + завершены</p>
         </div>
       </div>
 
       {/* Tabel */}
       <div className="card !p-0 overflow-hidden">
         <div className="px-4 py-3 bg-gray-50 border-b">
-          <h3 className="font-semibold text-gray-700">Deals ({gefilterd.length})</h3>
+          <h3 className="font-semibold text-gray-700">Сделки ({gefilterd.length})</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b">
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Bedrijfsnaam</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Product</th>
-                <th className="text-right px-4 py-3 font-semibold text-gray-700">Waarde</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Status</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Setter</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Closer</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Datum</th>
-                {isManager && <th className="text-left px-4 py-3 font-semibold text-gray-700">Acties</th>}
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Компания</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Продукт</th>
+                <th className="text-right px-4 py-3 font-semibold text-gray-700">Стоимость</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Статус</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Сеттер</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Клоузер</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Дата</th>
+                {isManager && <th className="text-left px-4 py-3 font-semibold text-gray-700">Действия</th>}
               </tr>
             </thead>
             <tbody>
@@ -170,7 +170,7 @@ export default function DealsPage() {
                         onClick={() => handleDelete(deal.id)}
                         disabled={deletingId === deal.id}
                         className="text-xs text-red-500 hover:text-red-700 transition-colors disabled:opacity-50"
-                        title="Verwijderen"
+                        title="Удалить"
                       >
                         {deletingId === deal.id ? '...' : '🗑️'}
                       </button>
@@ -184,7 +184,7 @@ export default function DealsPage() {
                     colSpan={isManager ? 8 : 7}
                     className="px-4 py-12 text-center text-gray-400"
                   >
-                    Geen deals gevonden
+                    Сделки не найдены
                   </td>
                 </tr>
               )}

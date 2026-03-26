@@ -8,17 +8,19 @@ import Modal from '@/components/ui/Modal'
 import { ConfirmModal } from '@/components/ui/Modal'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
-const ROL_LABELS: Record<Rol, string> = {
-  founder: 'Founder', sales_manager: 'Team Manager', setter: 'Appointment Setter',
-  outreacher: 'Cold Outreacher', closer: 'Closer', creator: 'Creator', ambassadeur: 'Ambassadeur',
+const ROL_LABELS: Record<string, string> = {
+  founder: 'Franchise Owner', sales_manager: 'Team Manager', setter: 'Appointment Setter',
+  outreacher: 'Cold Outreacher', closer: 'Closer', creator: 'Creator', ambassadeur: 'Амбассадор',
   web_developer: 'Web Developer', head_of_tech: 'Head of Tech', ai_engineer: 'AI Engineer',
+  super_admin: 'Super Admin',
 }
-const ROL_COLORS: Record<Rol, string> = {
+const ROL_COLORS: Record<string, string> = {
   founder: 'bg-purple-100 text-purple-800', sales_manager: 'bg-blue-100 text-blue-800',
   setter: 'bg-green-100 text-green-800', outreacher: 'bg-orange-100 text-orange-800',
   closer: 'bg-red-100 text-red-800', creator: 'bg-pink-100 text-pink-800',
   ambassadeur: 'bg-teal-100 text-teal-800', web_developer: 'bg-indigo-100 text-indigo-800',
   head_of_tech: 'bg-cyan-100 text-cyan-800', ai_engineer: 'bg-emerald-100 text-emerald-800',
+  super_admin: 'bg-yellow-100 text-yellow-800',
 }
 
 interface AuthUser { id: string; email: string }
@@ -134,7 +136,7 @@ export default function TeamPage() {
       })
       if (!res.ok) {
         const err = await res.json()
-        alert('Fout: ' + (err.error ?? 'Onbekende fout'))
+        alert('Ошибка: ' + (err.error ?? 'Onbekende fout'))
         setSaving(false)
         return
       }
@@ -157,7 +159,7 @@ export default function TeamPage() {
       body: JSON.stringify({ table: 'team_members', id: lid.id })
     })
     if (!res.ok) {
-      alert('Verwijderen mislukt')
+      alert('Удаление не удалось')
       return
     }
     setVerwijderTarget(null)
@@ -173,7 +175,7 @@ export default function TeamPage() {
     // Zoek auth user ID
     const authUser = authUsers.find(u => u.email === resetTarget.email)
     if (!authUser) {
-      setResetMsg('❌ Auth gebruiker niet gevonden voor dit emailadres')
+      setResetMsg('❌ Пользователь Auth не найден для этого email')
       setResetSaving(false)
       return
     }
@@ -184,7 +186,7 @@ export default function TeamPage() {
     const data = await res.json()
     setResetSaving(false)
     if (res.ok) {
-      setResetMsg('✅ Wachtwoord succesvol gewijzigd')
+      setResetMsg('✅ Пароль успешно изменён')
       setTimeout(() => { setResetTarget(null); setNieuwWachtwoord(''); setResetMsg('') }, 1500)
     } else {
       setResetMsg('❌ ' + (data.error ?? 'Onbekende fout'))
@@ -201,14 +203,14 @@ export default function TeamPage() {
     const data = await res.json()
     setInviteSaving(false)
     if (res.ok) {
-      setInviteMsg('✅ Uitnodigingsmail verstuurd naar ' + inviteForm.email)
+      setInviteMsg('✅ Приглашение отправлено на ' + inviteForm.email)
       setTimeout(() => { setShowInviteModal(false); setInviteMsg(''); fetchData() }, 2000)
     } else {
       setInviteMsg('❌ ' + (data.error ?? 'Fout bij versturen'))
     }
   }
 
-  if (!isManager) return <div className="card text-center py-12 text-gray-400">Geen toegang tot teambeheer.</div>
+  if (!isManager) return <div className="card text-center py-12 text-gray-400">Нет доступа к управлению командой.</div>
   if (loading) return <LoadingSpinner />
 
   return (
@@ -222,8 +224,8 @@ export default function TeamPage() {
         ))}
         <div className="ml-auto pb-2">
           <div className="flex gap-2">
-            <button onClick={() => { setInviteForm({ naam: '', email: '', rol: 'setter', afdeling: 'sales', commissie_pct: '', discord_naam: '' }); setInviteMsg(''); setShowInviteModal(true) }} className="btn-secondary">📧 Uitnodiging sturen</button>
-            <button onClick={openNieuw} className="btn-primary">+ Teamlid toevoegen</button>
+            <button onClick={() => { setInviteForm({ naam: '', email: '', rol: 'setter', afdeling: 'sales', commissie_pct: '', discord_naam: '' }); setInviteMsg(''); setShowInviteModal(true) }} className="btn-secondary">📧 Отправить приглашение</button>
+            <button onClick={openNieuw} className="btn-primary">+ Добавить участника</button>
           </div>
         </div>
       </div>
@@ -233,14 +235,14 @@ export default function TeamPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Naam</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Rol</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Имя</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Роль</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">E-mail</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">Discord</th>
-                {isManager && <th className="text-right px-4 py-3 font-semibold text-gray-700">Commissie %</th>}
-                <th className="text-right px-4 py-3 font-semibold text-gray-700">Omzet</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Status</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Acties</th>
+                {isManager && <th className="text-right px-4 py-3 font-semibold text-gray-700">Комиссия %</th>}
+                <th className="text-right px-4 py-3 font-semibold text-gray-700">Выручка</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Статус</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Действия</th>
               </tr>
             </thead>
             <tbody>
@@ -253,104 +255,104 @@ export default function TeamPage() {
                   {isManager && <td className="px-4 py-3 text-right font-medium">{lid.commissie_pct}%</td>}
                   <td className="px-4 py-3 text-right text-[#1A7A3A] font-semibold">€{(lid.totale_omzet ?? 0).toLocaleString('nl-NL')}</td>
                   <td className="px-4 py-3">
-                    {lid.actief ? <span className="badge bg-green-100 text-green-700">✓ Actief</span> : <span className="badge bg-gray-100 text-gray-500">Inactief</span>}
+                    {lid.actief ? <span className="badge bg-green-100 text-green-700">✓ Активный</span> : <span className="badge bg-gray-100 text-gray-500">Неактивный</span>}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1 flex-wrap">
-                      <button onClick={() => openEdit(lid)} className="text-xs px-2 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100">Bewerk</button>
-                      <button onClick={() => { setResetTarget(lid); setNieuwWachtwoord(''); setResetMsg('') }} className="text-xs px-2 py-1 rounded bg-purple-50 text-purple-700 hover:bg-purple-100">🔑 Wachtwoord</button>
+                      <button onClick={() => openEdit(lid)} className="text-xs px-2 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100">Изменить</button>
+                      <button onClick={() => { setResetTarget(lid); setNieuwWachtwoord(''); setResetMsg('') }} className="text-xs px-2 py-1 rounded bg-purple-50 text-purple-700 hover:bg-purple-100">🔑 Пароль</button>
                       <button onClick={() => setVerwijderTarget(lid)}
                         className="text-xs px-2 py-1 bg-red-50 text-red-700 rounded hover:bg-red-100">
-                        🗑️ Verwijder
+                        🗑️ Удалить
                       </button>
                       <button onClick={() => setDeactiveerTarget(lid)}
                         className={`text-xs px-2 py-1 rounded ${lid.actief ? 'bg-orange-50 text-orange-700 hover:bg-orange-100' : 'bg-green-50 text-green-700 hover:bg-green-100'}`}>
-                        {lid.actief ? 'Deactiveer' : 'Activeer'}
+                        {lid.actief ? 'Деактивировать' : 'Активировать'}
                       </button>
                     </div>
                   </td>
                 </tr>
               ))}
-              {displayTeam.length === 0 && <tr><td colSpan={8} className="px-4 py-12 text-center text-gray-400">Geen teamleden gevonden</td></tr>}
+              {displayTeam.length === 0 && <tr><td colSpan={8} className="px-4 py-12 text-center text-gray-400">Участники не найдены</td></tr>}
             </tbody>
           </table>
         </div>
       </div>
 
       {/* Add/Edit modal */}
-      <Modal open={showModal} onClose={() => setShowModal(false)} title={editTarget ? 'Teamlid bewerken' : 'Teamlid toevoegen'} size="lg">
+      <Modal open={showModal} onClose={() => setShowModal(false)} title={editTarget ? 'Изменить участника' : 'Добавить участника'} size="lg">
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <div><label className="label">Naam *</label>
+            <div><label className="label">Имя *</label>
               <input className="input" value={form.naam} onChange={e => setForm(f => ({...f, naam: e.target.value}))} /></div>
-            <div><label className="label">E-mailadres *</label>
+            <div><label className="label">Эл. почта *</label>
               <input type="email" className="input" value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))} disabled={!!editTarget} /></div>
           </div>
           {!editTarget && (
-            <div><label className="label">Wachtwoord *</label>
+            <div><label className="label">Пароль *</label>
               <input type="password" className="input" value={form.wachtwoord} onChange={e => setForm(f => ({...f, wachtwoord: e.target.value}))} /></div>
           )}
           <div className="grid grid-cols-2 gap-4">
-            <div><label className="label">Rol</label>
+            <div><label className="label">Роль</label>
               <select className="input" value={form.rol} onChange={e => setForm(f => ({...f, rol: e.target.value as Rol}))}>
                 {Object.entries(ROL_LABELS).map(([v,l]) => <option key={v} value={v}>{l}</option>)}
               </select></div>
-            <div><label className="label">Afdeling</label>
+            <div><label className="label">Отдел</label>
               <select className="input" value={form.afdeling} onChange={e => setForm(f => ({...f, afdeling: e.target.value as Afdeling}))}>
                 {['sales','outreach','content','management','tech'].map(a => <option key={a} value={a}>{a}</option>)}
               </select></div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             {isManager && (
-              <div><label className="label">Commissie %</label>
+              <div><label className="label">Комиссия %</label>
                 <input type="number" min="0" max="100" step="0.5" className="input" value={form.commissie_pct} onChange={e => setForm(f => ({...f, commissie_pct: e.target.value}))} /></div>
             )}
-            <div><label className="label">Discord naam</label>
+            <div><label className="label">Discord имя</label>
               <input className="input" value={form.discord_naam} onChange={e => setForm(f => ({...f, discord_naam: e.target.value}))} /></div>
           </div>
           <div className="flex gap-3 justify-end pt-2 border-t">
-            <button onClick={() => setShowModal(false)} className="btn-secondary">Annuleren</button>
+            <button onClick={() => setShowModal(false)} className="btn-secondary">Отмена</button>
             <button onClick={handleSave} disabled={saving || !form.naam || (!editTarget && (!form.email || !form.wachtwoord))} className="btn-primary disabled:opacity-50">
-              {saving ? 'Opslaan...' : editTarget ? 'Wijzigingen opslaan' : 'Teamlid aanmaken'}
+              {saving ? 'Сохранение...' : editTarget ? 'Сохранить изменения' : 'Создать участника'}
             </button>
           </div>
         </div>
       </Modal>
 
       {/* Wachtwoord reset modal */}
-      <Modal open={!!resetTarget} onClose={() => setResetTarget(null)} title={`Wachtwoord wijzigen — ${resetTarget?.naam}`}>
+      <Modal open={!!resetTarget} onClose={() => setResetTarget(null)} title={`Изменить пароль — ${resetTarget?.naam}`}>
         <div className="space-y-4">
-          <p className="text-sm text-gray-500">Stel een nieuw wachtwoord in voor <strong>{resetTarget?.email}</strong></p>
+          <p className="text-sm text-gray-500">Установить новый пароль для <strong>{resetTarget?.email}</strong></p>
           <div>
-            <label className="label">Nieuw wachtwoord (min. 6 tekens)</label>
+            <label className="label">Новый пароль (мин. 6 символов)</label>
             <input type="password" className="input" value={nieuwWachtwoord}
               onChange={e => setNieuwWachtwoord(e.target.value)} placeholder="••••••••" />
           </div>
           {resetMsg && <p className="text-sm font-medium">{resetMsg}</p>}
           <div className="flex gap-3 justify-end pt-2 border-t">
-            <button onClick={() => setResetTarget(null)} className="btn-secondary">Annuleren</button>
+            <button onClick={() => setResetTarget(null)} className="btn-secondary">Отмена</button>
             <button onClick={handleResetWachtwoord} disabled={resetSaving || nieuwWachtwoord.length < 6} className="btn-primary disabled:opacity-50">
-              {resetSaving ? 'Bezig...' : 'Wachtwoord instellen'}
+              {resetSaving ? 'Загрузка...' : 'Установить пароль'}
             </button>
           </div>
         </div>
       </Modal>
 
-      <Modal open={showInviteModal} onClose={() => setShowInviteModal(false)} title="Uitnodiging versturen" size="lg">
+      <Modal open={showInviteModal} onClose={() => setShowInviteModal(false)} title="Отправить приглашение" size="lg">
       <div className="space-y-4">
-        <p className="text-sm text-gray-500">De ontvanger krijgt een e-mail met een link om een wachtwoord in te stellen en in te loggen.</p>
+        <p className="text-sm text-gray-500">Получатель получит письмо со ссылкой для установки пароля и входа.</p>
         <div className="grid grid-cols-2 gap-4">
-          <div><label className="label">Naam *</label><input className="input" value={inviteForm.naam} onChange={e => setInviteForm(f => ({...f, naam: e.target.value}))} /></div>
-          <div><label className="label">E-mailadres *</label><input type="email" className="input" value={inviteForm.email} onChange={e => setInviteForm(f => ({...f, email: e.target.value}))} /></div>
-          <div><label className="label">Rol</label><select className="input" value={inviteForm.rol} onChange={e => setInviteForm(f => ({...f, rol: e.target.value as Rol}))}>{Object.entries(ROL_LABELS).map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></div>
-          <div><label className="label">Afdeling</label><select className="input" value={inviteForm.afdeling} onChange={e => setInviteForm(f => ({...f, afdeling: e.target.value as Afdeling}))}>{['sales','outreach','content','management','tech'].map(a => <option key={a} value={a}>{a}</option>)}</select></div>
-          {isManager && <div><label className="label">Commissie %</label><input type="number" min="0" max="100" className="input" value={inviteForm.commissie_pct} onChange={e => setInviteForm(f => ({...f, commissie_pct: e.target.value}))} /></div>}
-          <div><label className="label">Discord naam</label><input className="input" value={inviteForm.discord_naam} onChange={e => setInviteForm(f => ({...f, discord_naam: e.target.value}))} /></div>
+          <div><label className="label">Имя *</label><input className="input" value={inviteForm.naam} onChange={e => setInviteForm(f => ({...f, naam: e.target.value}))} /></div>
+          <div><label className="label">Эл. почта *</label><input type="email" className="input" value={inviteForm.email} onChange={e => setInviteForm(f => ({...f, email: e.target.value}))} /></div>
+          <div><label className="label">Роль</label><select className="input" value={inviteForm.rol} onChange={e => setInviteForm(f => ({...f, rol: e.target.value as Rol}))}>{Object.entries(ROL_LABELS).map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></div>
+          <div><label className="label">Отдел</label><select className="input" value={inviteForm.afdeling} onChange={e => setInviteForm(f => ({...f, afdeling: e.target.value as Afdeling}))}>{['sales','outreach','content','management','tech'].map(a => <option key={a} value={a}>{a}</option>)}</select></div>
+          {isManager && <div><label className="label">Комиссия %</label><input type="number" min="0" max="100" className="input" value={inviteForm.commissie_pct} onChange={e => setInviteForm(f => ({...f, commissie_pct: e.target.value}))} /></div>}
+          <div><label className="label">Discord имя</label><input className="input" value={inviteForm.discord_naam} onChange={e => setInviteForm(f => ({...f, discord_naam: e.target.value}))} /></div>
         </div>
         {inviteMsg && <p className="text-sm font-medium">{inviteMsg}</p>}
         <div className="flex gap-3 justify-end pt-2 border-t">
-          <button onClick={() => setShowInviteModal(false)} className="btn-secondary">Annuleren</button>
-          <button onClick={handleInvite} disabled={inviteSaving || !inviteForm.naam || !inviteForm.email} className="btn-primary disabled:opacity-50">{inviteSaving ? 'Versturen...' : '📧 Uitnodiging versturen'}</button>
+          <button onClick={() => setShowInviteModal(false)} className="btn-secondary">Отмена</button>
+          <button onClick={handleInvite} disabled={inviteSaving || !inviteForm.naam || !inviteForm.email} className="btn-primary disabled:opacity-50">{inviteSaving ? 'Отправка...' : '📧 Отправить приглашение'}</button>
         </div>
       </div>
     </Modal>
@@ -359,17 +361,17 @@ export default function TeamPage() {
         open={!!deactiveerTarget}
         onClose={() => setDeactiveerTarget(null)}
         onConfirm={() => deactiveerTarget && handleDeactiveer(deactiveerTarget)}
-        title={deactiveerTarget?.actief ? 'Teamlid deactiveren' : 'Teamlid activeren'}
-        message={`Weet je zeker dat je ${deactiveerTarget?.naam} wilt ${deactiveerTarget?.actief ? 'deactiveren' : 'activeren'}?`}
-        confirmLabel={deactiveerTarget?.actief ? 'Deactiveren' : 'Activeren'}
+        title={deactiveerTarget?.actief ? 'Деактивировать участника' : 'Активировать участника'}
+        message={`Вы уверены, что хотите ${deactiveerTarget?.actief ? 'деактивировать' : 'активировать'} ${deactiveerTarget?.naam}?`}
+        confirmLabel={deactiveerTarget?.actief ? 'Деактивировать' : 'Активировать'}
       />
       <ConfirmModal
         open={!!verwijderTarget}
         onClose={() => setVerwijderTarget(null)}
         onConfirm={() => verwijderTarget && handleVerwijder(verwijderTarget)}
-        title="Teamlid verwijderen"
-        message={`Weet je zeker dat je ${verwijderTarget?.naam} permanent wilt verwijderen? Dit kan niet ongedaan gemaakt worden.`}
-        confirmLabel="Permanent verwijderen"
+        title="Удалить участника"
+        message={`Вы уверены, что хотите навсегда удалить ${verwijderTarget?.naam}? Это действие нельзя отменить.`}
+        confirmLabel="Удалить навсегда"
         danger
       />
     </div>

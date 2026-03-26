@@ -14,14 +14,14 @@ import { useDraggable } from '@dnd-kit/core'
 import { differenceInDays } from 'date-fns'
 
 const STAGES: { key: DealStatus; label: string; color: string; bg: string }[] = [
-  { key: 'call', label: '📞 Call ingepland', color: 'border-blue-400', bg: 'bg-blue-50' },
-  { key: 'offerte', label: '📄 Offerte', color: 'border-purple-400', bg: 'bg-purple-50' },
-  { key: 'onderhand', label: '🤝 Onderhandeling', color: 'border-yellow-400', bg: 'bg-yellow-50' },
-  { key: 'gesloten', label: '✅ Gesloten', color: 'border-green-400', bg: 'bg-green-50' },
-  { key: 'betaald', label: '💰 Betaald', color: 'border-green-600', bg: 'bg-green-100' },
-  { key: 'levering', label: '🔄 Levering', color: 'border-orange-400', bg: 'bg-orange-50' },
-  { key: 'opgeleverd', label: '🏁 Opgeleverd', color: 'border-teal-400', bg: 'bg-teal-50' },
-  { key: 'verloren', label: '❌ Verloren', color: 'border-red-400', bg: 'bg-red-50' },
+  { key: 'call', label: '📞 Звонок запланирован', color: 'border-blue-400', bg: 'bg-blue-50' },
+  { key: 'offerte', label: '📄 Предложение', color: 'border-purple-400', bg: 'bg-purple-50' },
+  { key: 'onderhand', label: '🤝 Переговоры', color: 'border-yellow-400', bg: 'bg-yellow-50' },
+  { key: 'gesloten', label: '✅ Закрыта', color: 'border-green-400', bg: 'bg-green-50' },
+  { key: 'betaald', label: '💰 Оплачена', color: 'border-green-600', bg: 'bg-green-100' },
+  { key: 'levering', label: '🔄 Доставка', color: 'border-orange-400', bg: 'bg-orange-50' },
+  { key: 'opgeleverd', label: '🏁 Завершена', color: 'border-teal-400', bg: 'bg-teal-50' },
+  { key: 'verloren', label: '❌ Потеряна', color: 'border-red-400', bg: 'bg-red-50' },
 ]
 
 const PRODUCT_LABELS: Record<string, string> = {
@@ -147,7 +147,7 @@ export default function PipelinePage() {
       })
       if (!res.ok) {
         const err = await res.json()
-        alert("Opslaan mislukt: " + (err.error || "onbekende fout"))
+        alert("Ошибка сохранения: " + (err.error || "onbekende fout"))
       }
     } else {
       const res = await apiFetch("/api/crud", {
@@ -156,7 +156,7 @@ export default function PipelinePage() {
       })
       if (!res.ok) {
         const err = await res.json()
-        alert("Aanmaken mislukt: " + (err.error || "onbekende fout"))
+        alert("Ошибка создания: " + (err.error || "onbekende fout"))
       }
     }
     setSaving(false)
@@ -165,7 +165,7 @@ export default function PipelinePage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Deal verwijderen?')) return
+    if (!confirm('Удалить сделку?')) return
     setDeals(prev => prev.filter(d => d.id !== id))
     const res = await apiFetch('/api/crud', {
       method: 'DELETE',
@@ -174,7 +174,7 @@ export default function PipelinePage() {
     if (!res.ok) {
       const data = await res.json()
       fetchDeals()
-      alert('Verwijderen mislukt: ' + (data.error || 'onbekende fout'))
+      alert('Ошибка удаления: ' + (data.error || 'onbekende fout'))
     }
   }
 
@@ -193,10 +193,10 @@ export default function PipelinePage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-[#1B2A4A]">Sales Pipeline</h2>
-          <p className="text-sm text-gray-500">Pipeline waarde: <span className="font-semibold text-[#6B3FA0]">€{totalPipeline.toLocaleString('nl-NL')}</span></p>
+          <h2 className="text-lg font-bold text-[#1B2A4A]">Пайплайн продаж</h2>
+          <p className="text-sm text-gray-500">Стоимость пайплайна: <span className="font-semibold text-[#6B3FA0]">€{totalPipeline.toLocaleString('nl-NL')}</span></p>
         </div>
-        {canCreate && <button onClick={openNew} className="btn-primary">+ Nieuwe deal</button>}
+        {canCreate && <button onClick={openNew} className="btn-primary">+ Новая сделка</button>}
       </div>
 
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -214,67 +214,67 @@ export default function PipelinePage() {
       </DndContext>
 
       {/* Deal modal (bewerken/aanmaken) */}
-      <Modal open={showModal} onClose={() => setShowModal(false)} title={editDeal ? 'Deal bewerken' : 'Nieuwe deal'} size="lg">
+      <Modal open={showModal} onClose={() => setShowModal(false)} title={editDeal ? 'Изменить сделку' : 'Новая сделка'} size="lg">
         <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
           <div className="grid grid-cols-2 gap-4">
-            <div><label className="label">Bedrijfsnaam *</label>
+            <div><label className="label">Название компании *</label>
               <input className="input" value={form.bedrijfsnaam ?? ''} onChange={e => setForm(f => ({...f, bedrijfsnaam: e.target.value}))} /></div>
-            <div><label className="label">Product</label>
+            <div><label className="label">Продукт</label>
               <select className="input" value={form.product ?? ''} onChange={e => setForm(f => ({...f, product: e.target.value as Deal['product']}))}>
                 <option value="">-</option>
                 {Object.entries(PRODUCT_LABELS).map(([v,l]) => <option key={v} value={v}>{l}</option>)}
               </select></div>
-            <div><label className="label">Deal waarde (€)</label>
+            <div><label className="label">Стоимость сделки (€)</label>
               <input type="number" className="input" value={form.deal_waarde ?? ''} onChange={e => setForm(f => ({...f, deal_waarde: Number(e.target.value)}))} /></div>
-            <div><label className="label">Status</label>
+            <div><label className="label">Статус</label>
               <select className="input" value={form.deal_status ?? 'call'} onChange={e => setForm(f => ({...f, deal_status: e.target.value as DealStatus}))}>
                 {STAGES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
               </select></div>
-            <div><label className="label">Closer</label>
+            <div><label className="label">Клоузер</label>
               <select className="input" value={form.closer_naam ?? ''} onChange={e => setForm(f => ({...f, closer_naam: e.target.value || null}))}>
-                <option value="">- geen -</option>
+                <option value="">- нет -</option>
                 {closers.map(l => <option key={l.id} value={l.naam}>{l.naam}</option>)}
               </select></div>
-            <div><label className="label">Setter</label>
+            <div><label className="label">Сеттер</label>
               <select className="input" value={form.setter_naam ?? ''} onChange={e => setForm(f => ({...f, setter_naam: e.target.value || null}))}>
-                <option value="">- geen -</option>
+                <option value="">- нет -</option>
                 {setters.map(l => <option key={l.id} value={l.naam}>{l.naam}</option>)}
               </select></div>
             <div><label className="label">Creator</label>
               <select className="input" value={form.creator_naam ?? ''} onChange={e => setForm(f => ({...f, creator_naam: e.target.value || null}))}>
-                <option value="">- geen -</option>
+                <option value="">- нет -</option>
                 {creators.map(l => <option key={l.id} value={l.naam}>{l.naam}</option>)}
               </select></div>
-            <div><label className="label">Ambassadeur</label>
+            <div><label className="label">Амбассадор</label>
               <select className="input" value={form.ambassadeur_naam ?? ''} onChange={e => setForm(f => ({...f, ambassadeur_naam: e.target.value || null}))}>
-                <option value="">- geen -</option>
+                <option value="">- нет -</option>
                 {ambassadeurs.map(l => <option key={l.id} value={l.naam}>{l.naam}</option>)}
               </select></div>
-            <div><label className="label">Commissie closer (€)</label>
+            <div><label className="label">Комиссия клоузера (€)</label>
               <input type="number" className="input" value={form.commissie_closer ?? ''} onChange={e => setForm(f => ({...f, commissie_closer: Number(e.target.value)}))} /></div>
-            <div><label className="label">Commissie setter (€)</label>
+            <div><label className="label">Комиссия сеттера (€)</label>
               <input type="number" className="input" value={form.commissie_setter ?? ''} onChange={e => setForm(f => ({...f, commissie_setter: Number(e.target.value)}))} /></div>
             {form.creator_naam && (
-              <div><label className="label">Commissie creator (€)</label>
+              <div><label className="label">Комиссия creator (€)</label>
                 <input type="number" className="input" value={form.commissie_creator ?? ''} onChange={e => setForm(f => ({...f, commissie_creator: Number(e.target.value)}))} /></div>
             )}
             {form.ambassadeur_naam && (
-              <div><label className="label">Commissie ambassadeur (€)</label>
+              <div><label className="label">Комиссия амбассадора (€)</label>
                 <input type="number" className="input" value={form.commissie_ambassadeur ?? ''} onChange={e => setForm(f => ({...f, commissie_ambassadeur: Number(e.target.value)}))} /></div>
             )}
             <div className="col-span-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="text-sm text-gray-600">Sales manager commissie: <span className="font-semibold text-[#6B3FA0]">€{salesManagerComm.toLocaleString('nl-NL')}</span> <span className="text-gray-400">(5% — automatisch)</span></p>
+              <p className="text-sm text-gray-600">Комиссия менеджера: <span className="font-semibold text-[#6B3FA0]">€{salesManagerComm.toLocaleString('nl-NL')}</span> <span className="text-gray-400">(5% — автоматически)</span></p>
             </div>
           </div>
           {isManager && (
             <div className="flex gap-4">
               <label className="flex items-center gap-2 text-sm cursor-pointer">
                 <input type="checkbox" checked={form.betaling_ontvangen ?? false} onChange={e => setForm(f => ({...f, betaling_ontvangen: e.target.checked}))} />
-                Betaling ontvangen
+                Оплата получена
               </label>
               <label className="flex items-center gap-2 text-sm cursor-pointer">
                 <input type="checkbox" checked={form.commissie_betaald ?? false} onChange={e => setForm(f => ({...f, commissie_betaald: e.target.checked}))} />
-                Commissie uitbetaald
+                Комиссия выплачена
               </label>
             </div>
           )}
@@ -285,16 +285,16 @@ export default function PipelinePage() {
                 <input type="checkbox" checked={form.recurring ?? false}
                   onChange={e => setForm(f => ({...f, recurring: e.target.checked}))}
                   className="w-4 h-4 accent-[#6B3FA0]" />
-                <span className="text-sm font-medium text-gray-700">Recurring deal (terugkerende omzet)</span>
+                <span className="text-sm font-medium text-gray-700">Recurring сделка (повторная выручка)</span>
               </label>
             </div>
             {form.recurring && (
               <div className="grid grid-cols-1 gap-4 pl-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="label">Maandbedrag recurring (€)</label>
+                    <label className="label">Ежемесячная сумма (€)</label>
                     <input type="number" className="input"
-                      placeholder="bijv. 150"
+                      placeholder="напр. 150"
                       value={form.recurring_maand_bedrag ?? ""}
                       onChange={e => setForm(f => ({...f, recurring_maand_bedrag: Number(e.target.value) || null}))} />
                   </div>
@@ -302,7 +302,7 @@ export default function PipelinePage() {
                 {/* Selecteer wie recurring commissie ontvangt */}
                 {isManager && (
                   <div>
-                    <label className="label">Wie ontvangt recurring commissie?</label>
+                    <label className="label">Кто получает recurring комиссию?</label>
                     <div className="grid grid-cols-2 gap-2 mt-1">
                       {leden.filter(l => l.actief && l.rol !== "founder").map(lid => {
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -330,50 +330,50 @@ export default function PipelinePage() {
                         )
                       })}
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">Geselecteerde leden ontvangen maandelijks hun % over het maandbedrag</p>
+                    <p className="text-xs text-gray-400 mt-1">Выбранные участники ежемесячно получают свой % от месячной суммы</p>
                   </div>
                 )}
               </div>
             )}
           </div>
-          <div><label className="label">Notities</label>
+          <div><label className="label">Заметки</label>
             <textarea className="input" rows={2} value={form.notities ?? ''} onChange={e => setForm(f => ({...f, notities: e.target.value}))} /></div>
           <div className="flex gap-3 justify-end pt-2 border-t">
-            <button onClick={() => setShowModal(false)} className="btn-secondary">Annuleren</button>
+            <button onClick={() => setShowModal(false)} className="btn-secondary">Отмена</button>
             <button onClick={handleSave} disabled={saving || !form.bedrijfsnaam} className="btn-primary disabled:opacity-50">
-              {saving ? 'Opslaan...' : editDeal ? 'Opslaan' : 'Deal aanmaken'}
+              {saving ? 'Сохранение...' : editDeal ? 'Сохранить' : 'Создать сделку'}
             </button>
           </div>
         </div>
       </Modal>
 
       {/* Read-only deal modal */}
-      <Modal open={showViewModal} onClose={() => setShowViewModal(false)} title="Deal details" size="lg">
+      <Modal open={showViewModal} onClose={() => setShowViewModal(false)} title="Детали сделки" size="lg">
         {viewDeal && (
           <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Bedrijf</p>
+                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Компания</p>
                 <p className="font-semibold text-[#1B2A4A]">{viewDeal.bedrijfsnaam}</p>
               </div>
               <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Status</p>
+                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Статус</p>
                 <p>{STAGES.find(s => s.key === viewDeal.deal_status)?.label ?? viewDeal.deal_status}</p>
               </div>
               <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Deal waarde</p>
+                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Стоимость</p>
                 <p className="font-bold text-[#1A7A3A]">{viewDeal.deal_waarde ? `€${viewDeal.deal_waarde.toLocaleString('nl-NL')}` : '—'}</p>
               </div>
               <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Product</p>
+                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Продукт</p>
                 <p>{viewDeal.product ? (PRODUCT_LABELS[viewDeal.product] ?? viewDeal.product) : '—'}</p>
               </div>
               <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Closer</p>
+                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Клоузер</p>
                 <p>{viewDeal.closer_naam ?? '—'}</p>
               </div>
               <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Setter</p>
+                <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Сеттер</p>
                 <p>{viewDeal.setter_naam ?? '—'}</p>
               </div>
               {viewDeal.creator_naam && (
@@ -384,13 +384,13 @@ export default function PipelinePage() {
               )}
               {viewDeal.notities && (
                 <div className="col-span-2 bg-gray-50 rounded-lg p-3">
-                  <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Notities</p>
+                  <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Заметки</p>
                   <p className="text-gray-700 whitespace-pre-wrap">{viewDeal.notities}</p>
                 </div>
               )}
             </div>
             <div className="flex justify-end pt-2 border-t">
-              <button onClick={() => setShowViewModal(false)} className="btn-secondary">Sluiten</button>
+              <button onClick={() => setShowViewModal(false)} className="btn-secondary">Закрыть</button>
             </div>
           </div>
         )}
@@ -409,7 +409,7 @@ function DroppableColumn({ stage, deals, onEdit, onDelete, onView, canEditDeal, 
     <div ref={setNodeRef} className={`flex-shrink-0 w-64 rounded-xl border-2 ${stage.color} ${stage.bg} transition-all ${isOver ? 'ring-2 ring-offset-1 ring-[#6B3FA0]' : ''}`}>
       <div className="p-3 border-b border-black/10">
         <p className="font-semibold text-sm text-gray-700">{stage.label}</p>
-        <p className="text-xs text-gray-500">{deals.length} deals · €{total.toLocaleString('nl-NL')}</p>
+        <p className="text-xs text-gray-500">{deals.length} сделок · €{total.toLocaleString('nl-NL')}</p>
       </div>
       <div className="p-2 space-y-2 min-h-[200px]">
         {deals.map(deal => (
@@ -437,15 +437,15 @@ function DealCard({ deal, onEdit, onDelete, onView, isDragging, canEdit, isManag
       {deal.deal_waarde && <p className="text-sm font-bold text-[#1A7A3A]">€{deal.deal_waarde.toLocaleString('nl-NL')}</p>}
       {deal.closer_naam && <p className="text-xs text-gray-500 mt-1">👤 {deal.closer_naam}</p>}
       {deal.setter_naam && <p className="text-xs text-gray-400">🎯 {deal.setter_naam}</p>}
-      <p className="text-xs text-gray-400">{days}d geleden</p>
+      <p className="text-xs text-gray-400">{days}д назад</p>
       <div className="flex gap-1 mt-2" onPointerDown={e => e.stopPropagation()}>
         {canEdit ? (
           <>
-            <button onClick={() => onEdit(deal)} className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100">Bewerk</button>
-            {isManager && <button onClick={() => onDelete(deal.id)} className="text-xs px-2 py-1 bg-red-50 text-red-700 rounded hover:bg-red-100">Verwijder</button>}
+            <button onClick={() => onEdit(deal)} className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100">Изменить</button>
+            {isManager && <button onClick={() => onDelete(deal.id)} className="text-xs px-2 py-1 bg-red-50 text-red-700 rounded hover:bg-red-100">Удалить</button>}
           </>
         ) : (
-          <button onClick={() => onView(deal)} className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded hover:bg-gray-200">👁 Bekijk</button>
+          <button onClick={() => onView(deal)} className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded hover:bg-gray-200">👁 Просмотр</button>
         )}
       </div>
     </div>

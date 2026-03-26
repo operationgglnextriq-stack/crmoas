@@ -8,7 +8,7 @@ import Modal, { ConfirmModal } from '@/components/ui/Modal'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { format } from 'date-fns'
-import { nl } from 'date-fns/locale'
+import { ru } from 'date-fns/locale'
 
 export default function MarktdataPage() {
   const { teamMember } = useAuth()
@@ -103,22 +103,22 @@ export default function MarktdataPage() {
     <div className="space-y-6">
       <div className="grid grid-cols-3 gap-4">
         <div className="card !p-4 border-l-4 border-l-[#6B3FA0]">
-          <p className="text-xs text-gray-500">Totaal ingediend</p>
+          <p className="text-xs text-gray-500">Всего подано</p>
           <p className="text-2xl font-bold text-[#6B3FA0]">{items.length}</p>
         </div>
         <div className="card !p-4 border-l-4 border-l-[#E67E22]">
-          <p className="text-xs text-gray-500">Productkansen 🚀</p>
+          <p className="text-xs text-gray-500">Возможности 🚀</p>
           <p className="text-2xl font-bold text-[#E67E22]">{items.filter(i => i.product_kans).length}</p>
         </div>
         <div className="card !p-4 border-l-4 border-l-[#1A7A3A]">
-          <p className="text-xs text-gray-500">Unieke pijnpunten</p>
+          <p className="text-xs text-gray-500">Уникальных болевых точек</p>
           <p className="text-2xl font-bold text-[#1A7A3A]">{Object.keys(pijnMap).length}</p>
         </div>
       </div>
 
       {chartData.length > 0 && (
         <div className="card">
-          <h3 className="font-semibold text-[#1B2A4A] mb-4">Top pijnpunten (frequentie)</h3>
+          <h3 className="font-semibold text-[#1B2A4A] mb-4">Топ болевых точек (частота)</h3>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={chartData} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -133,15 +133,15 @@ export default function MarktdataPage() {
 
       <div className="flex flex-wrap items-center gap-3">
         <select value={filterAfdeling} onChange={e => setFilterAfdeling(e.target.value)} className="input !w-40">
-          <option value="">Alle afdelingen</option>
+          <option value="">Все отделы</option>
           {['sales','outreach','content','management','tech'].map(a => <option key={a} value={a}>{a}</option>)}
         </select>
         <select value={filterCategorie} onChange={e => setFilterCategorie(e.target.value)} className="input !w-44">
-          <option value="">Alle categorieën</option>
+          <option value="">Все категории</option>
           {categorieën.map(c => <option key={c!} value={c!}>{c}</option>)}
         </select>
         <div className="ml-auto">
-          <button onClick={openNieuw} className="btn-primary">+ Pijnpunt toevoegen</button>
+          <button onClick={openNieuw} className="btn-primary">+ Добавить болевую точку</button>
         </div>
       </div>
 
@@ -150,14 +150,14 @@ export default function MarktdataPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Pijnpunt</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Ingediend door</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Bedrijf</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Sector</th>
-                <th className="text-right px-4 py-3 font-semibold text-gray-700">Freq.</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Kans</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Datum</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Acties</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Болевая точка</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Добавлено</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Компания</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Сектор</th>
+                <th className="text-right px-4 py-3 font-semibold text-gray-700">Частота</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Возможность</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Дата</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Действия</th>
               </tr>
             </thead>
             <tbody>
@@ -171,52 +171,52 @@ export default function MarktdataPage() {
                   <td className="px-4 py-3 text-gray-500">{item.bedrijf ?? '-'}</td>
                   <td className="px-4 py-3 text-gray-500">{item.sector ?? '-'}</td>
                   <td className="px-4 py-3 text-right font-semibold">{item.frequentie}</td>
-                  <td className="px-4 py-3">{item.product_kans && <span className="badge bg-orange-100 text-orange-800">🚀 Kans</span>}</td>
-                  <td className="px-4 py-3 text-gray-400 text-xs">{format(new Date(item.created_at), 'd MMM', { locale: nl })}</td>
+                  <td className="px-4 py-3">{item.product_kans && <span className="badge bg-orange-100 text-orange-800">🚀 Возможность</span>}</td>
+                  <td className="px-4 py-3 text-gray-400 text-xs">{format(new Date(item.created_at), 'd MMM', { locale: ru })}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
-                      <button onClick={() => openEdit(item)} className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100">Bewerk</button>
+                      <button onClick={() => openEdit(item)} className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100">Изменить</button>
                       {isManager && (
-                        <button onClick={() => setDeleteTarget(item)} className="text-xs px-2 py-1 bg-red-50 text-red-700 rounded hover:bg-red-100">Verwijder</button>
+                        <button onClick={() => setDeleteTarget(item)} className="text-xs px-2 py-1 bg-red-50 text-red-700 rounded hover:bg-red-100">Удалить</button>
                       )}
                     </div>
                   </td>
                 </tr>
               ))}
               {filtered.length === 0 && (
-                <tr><td colSpan={8} className="px-4 py-12 text-center text-gray-400">Geen marktdata gevonden</td></tr>
+                <tr><td colSpan={8} className="px-4 py-12 text-center text-gray-400">Данные рынка не найдены</td></tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      <Modal open={showModal} onClose={() => setShowModal(false)} title={editTarget ? 'Pijnpunt bewerken' : 'Pijnpunt toevoegen'}>
+      <Modal open={showModal} onClose={() => setShowModal(false)} title={editTarget ? 'Изменить болевую точку' : 'Добавить болевую точку'}>
         <div className="space-y-4">
           <div>
-            <label className="label">Pijnpunt *</label>
-            <textarea className="input h-20 resize-none" value={form.pijnpunt} onChange={e => setForm(f => ({...f, pijnpunt: e.target.value}))} placeholder="Welk probleem ervaart het bedrijf?" />
+            <label className="label">Болевая точка *</label>
+            <textarea className="input h-20 resize-none" value={form.pijnpunt} onChange={e => setForm(f => ({...f, pijnpunt: e.target.value}))} placeholder="Какую проблему испытывает компания?" />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="label">Bedrijf</label>
+            <div><label className="label">Компания</label>
               <input className="input" value={form.bedrijf} onChange={e => setForm(f => ({...f, bedrijf: e.target.value}))} /></div>
-            <div><label className="label">Sector</label>
+            <div><label className="label">Сектор</label>
               <input className="input" value={form.sector} onChange={e => setForm(f => ({...f, sector: e.target.value}))} /></div>
-            <div><label className="label">Software probleem</label>
+            <div><label className="label">Проблема ПО</label>
               <input className="input" value={form.software_probleem} onChange={e => setForm(f => ({...f, software_probleem: e.target.value}))} /></div>
-            <div><label className="label">Categorie</label>
-              <input className="input" value={form.categorie} onChange={e => setForm(f => ({...f, categorie: e.target.value}))} placeholder="bv. automatisering, website..." /></div>
-            <div><label className="label">Frequentie</label>
+            <div><label className="label">Категория</label>
+              <input className="input" value={form.categorie} onChange={e => setForm(f => ({...f, categorie: e.target.value}))} placeholder="напр. автоматизация, сайт..." /></div>
+            <div><label className="label">Частота</label>
               <input type="number" min="1" className="input" value={form.frequentie} onChange={e => setForm(f => ({...f, frequentie: Number(e.target.value)}))} /></div>
           </div>
           <label className="flex items-center gap-3 cursor-pointer">
             <input type="checkbox" checked={form.product_kans} onChange={e => setForm(f => ({...f, product_kans: e.target.checked}))} className="w-4 h-4 rounded" />
-            <span className="text-sm font-medium">🚀 Dit is een productkans</span>
+            <span className="text-sm font-medium">🚀 Это является возможностью</span>
           </label>
           <div className="flex gap-3 justify-end pt-2 border-t">
-            <button onClick={() => setShowModal(false)} className="btn-secondary">Annuleren</button>
+            <button onClick={() => setShowModal(false)} className="btn-secondary">Отмена</button>
             <button onClick={handleSave} disabled={!form.pijnpunt || saving} className="btn-primary disabled:opacity-50">
-              {saving ? 'Opslaan...' : editTarget ? 'Wijzigingen opslaan' : 'Opslaan'}
+              {saving ? 'Сохранение...' : editTarget ? 'Сохранить изменения' : 'Сохранить'}
             </button>
           </div>
         </div>
@@ -226,9 +226,9 @@ export default function MarktdataPage() {
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => deleteTarget && handleDelete(deleteTarget.id)}
-        title="Pijnpunt verwijderen"
-        message={`"${deleteTarget?.pijnpunt}" verwijderen?`}
-        confirmLabel="Verwijderen"
+        title="Удалить болевую точку"
+        message={`Удалить "${deleteTarget?.pijnpunt}"?`}
+        confirmLabel="Удалить"
         danger
       />
     </div>

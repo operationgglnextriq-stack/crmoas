@@ -43,6 +43,19 @@ const volgendeStatus: Record<TodoStatus, TodoStatus> = {
   gedaan: 'open',
 }
 
+const prioriteitLabels: Record<Prioriteit, string> = {
+  laag: 'Низкий',
+  normaal: 'Обычный',
+  hoog: 'Высокий',
+  urgent: 'Срочный',
+}
+
+const statusLabels: Record<TodoStatus, string> = {
+  open: 'Открытая',
+  bezig: 'В работе',
+  gedaan: 'Выполнено',
+}
+
 const leegForm = {
   titel: '',
   omschrijving: '',
@@ -103,7 +116,7 @@ export default function TodoPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Weet je zeker dat je deze taak wilt verwijderen?')) return
+    if (!confirm('Вы уверены, что хотите удалить эту задачу?')) return
     const res = await fetch('/api/todos', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
@@ -156,7 +169,7 @@ export default function TodoPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.titel.trim()) { setError('Titel is verplicht'); return }
+    if (!form.titel.trim()) { setError('Заголовок обязателен'); return }
     if (!teamMember) return
     setSaving(true)
     setError('')
@@ -182,7 +195,7 @@ export default function TodoPage() {
       setForm(leegForm)
     } else {
       const d = await res.json()
-      setError(d.error ?? 'Onbekende fout')
+      setError(d.error ?? 'Неизвестная ошибка')
     }
     setSaving(false)
   }
@@ -197,15 +210,22 @@ export default function TodoPage() {
   const aantalBezig = todos.filter(t => t.status === 'bezig').length
   const aantalGedaan = todos.filter(t => t.status === 'gedaan').length
 
+  const statusFilterLabels: Record<TodoStatus | 'alle', string> = {
+    alle: 'Все',
+    open: 'Открытые',
+    bezig: 'В работе',
+    gedaan: 'Выполнено',
+  }
+
   if (loading || !teamMember) return <LoadingSpinner />
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h2 className="text-lg font-bold text-[#1B2A4A]">📋 Todo List</h2>
+        <h2 className="text-lg font-bold text-[#1B2A4A]">📋 Список задач</h2>
         <button onClick={() => { setShowModal(true); setError('') }} className="btn-primary">
-          + Nieuwe taak
+          + Новая задача
         </button>
       </div>
 
@@ -213,15 +233,15 @@ export default function TodoPage() {
       <div className="grid grid-cols-3 gap-4">
         <div className="card text-center border-l-4 border-slate-400">
           <p className="text-2xl font-bold text-slate-700">{aantalOpen}</p>
-          <p className="text-sm text-gray-500 mt-1">Open taken</p>
+          <p className="text-sm text-gray-500 mt-1">Открытые задачи</p>
         </div>
         <div className="card text-center border-l-4 border-yellow-400">
           <p className="text-2xl font-bold text-yellow-600">{aantalBezig}</p>
-          <p className="text-sm text-gray-500 mt-1">Bezig</p>
+          <p className="text-sm text-gray-500 mt-1">В работе</p>
         </div>
         <div className="card text-center border-l-4 border-green-400">
           <p className="text-2xl font-bold text-green-600">{aantalGedaan}</p>
-          <p className="text-sm text-gray-500 mt-1">Gedaan</p>
+          <p className="text-sm text-gray-500 mt-1">Выполнено</p>
         </div>
       </div>
 
@@ -236,7 +256,7 @@ export default function TodoPage() {
               className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors capitalize"
               style={filterStatus === s ? { backgroundColor: '#6B3FA0', color: 'white' } : { color: '#4B5563' }}
             >
-              {s === 'alle' ? 'Alle' : s}
+              {statusFilterLabels[s]}
             </button>
           ))}
         </div>
@@ -246,11 +266,11 @@ export default function TodoPage() {
           onChange={e => setFilterPrioriteit(e.target.value as Prioriteit | 'alle')}
           className="input text-sm py-1.5 w-auto"
         >
-          <option value="alle">Alle prioriteiten</option>
-          <option value="laag">Laag</option>
-          <option value="normaal">Normaal</option>
-          <option value="hoog">Hoog</option>
-          <option value="urgent">Urgent</option>
+          <option value="alle">Все приоритеты</option>
+          <option value="laag">Низкий</option>
+          <option value="normaal">Обычный</option>
+          <option value="hoog">Высокий</option>
+          <option value="urgent">Срочный</option>
         </select>
       </div>
 
@@ -262,10 +282,10 @@ export default function TodoPage() {
           <div className="w-16 h-16 bg-purple-50 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-3xl">📋</span>
           </div>
-          <p className="text-lg font-bold text-[#1B2A4A] mb-1">Geen taken gevonden</p>
-          <p className="text-sm text-gray-400 mb-6">Maak de eerste taak aan voor het management team</p>
+          <p className="text-lg font-bold text-[#1B2A4A] mb-1">Задачи не найдены</p>
+          <p className="text-sm text-gray-400 mb-6">Создайте первую задачу для команды управления</p>
           <button onClick={() => { setShowModal(true); setError("") }} className="btn-primary">
-            + Nieuwe taak aanmaken
+            + Создать новую задачу
           </button>
         </div>
       ) : (
@@ -277,11 +297,11 @@ export default function TodoPage() {
             >
               {/* Badges */}
               <div className="flex items-center gap-2 flex-wrap">
-                <span className={`badge capitalize ${prioriteitBadge[todo.prioriteit]}`}>
-                  {todo.prioriteit}
+                <span className={`badge ${prioriteitBadge[todo.prioriteit]}`}>
+                  {prioriteitLabels[todo.prioriteit]}
                 </span>
-                <span className={`badge capitalize ${statusBadge[todo.status]}`}>
-                  {todo.status}
+                <span className={`badge ${statusBadge[todo.status]}`}>
+                  {statusLabels[todo.status]}
                 </span>
                 {todo.afdeling && (
                   <span className="badge bg-purple-100 text-purple-700">{todo.afdeling}</span>
@@ -297,7 +317,7 @@ export default function TodoPage() {
                   <p className="text-gray-500 text-xs mt-1 leading-relaxed line-clamp-2">{todo.omschrijving}</p>
                 )}
                 {!todo.omschrijving && (
-                  <p className="text-gray-300 text-xs mt-1 italic">Klik om te openen...</p>
+                  <p className="text-gray-300 text-xs mt-1 italic">Нажмите для открытия...</p>
                 )}
               </div>
 
@@ -312,7 +332,7 @@ export default function TodoPage() {
                 {todo.deadline && (
                   <div className="flex items-center gap-1.5">
                     <span>📅</span>
-                    <span>{new Date(todo.deadline).toLocaleDateString('nl-NL')}</span>
+                    <span>{new Date(todo.deadline).toLocaleDateString('ru-RU')}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-1.5">
@@ -328,7 +348,7 @@ export default function TodoPage() {
                     onClick={() => handleStatusChange(todo, 'bezig')}
                     className="flex-1 text-xs py-1.5 rounded-lg bg-yellow-50 text-yellow-700 hover:bg-yellow-100 font-medium transition-colors"
                   >
-                    ▶ Start
+                    ▶ Начать
                   </button>
                 )}
                 {todo.status === 'bezig' && (
@@ -336,7 +356,7 @@ export default function TodoPage() {
                     onClick={() => handleStatusChange(todo, 'gedaan')}
                     className="flex-1 text-xs py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 font-medium transition-colors"
                   >
-                    ✅ Afronden
+                    ✅ Завершить
                   </button>
                 )}
                 {todo.status === 'gedaan' && (
@@ -344,7 +364,7 @@ export default function TodoPage() {
                     onClick={() => handleStatusChange(todo, 'open')}
                     className="flex-1 text-xs py-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 font-medium transition-colors"
                   >
-                    ↩ Heropenen
+                    ↩ Переоткрыть
                   </button>
                 )}
                 <button
@@ -368,7 +388,7 @@ export default function TodoPage() {
       )}
 
       {/* Modal */}
-      <Modal open={showModal} onClose={() => setShowModal(false)} title="Nieuwe taak aanmaken">
+      <Modal open={showModal} onClose={() => setShowModal(false)} title="Создать новую задачу">
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-3 py-2">
@@ -377,43 +397,43 @@ export default function TodoPage() {
           )}
 
           <div>
-            <label className="label">Titel *</label>
+            <label className="label">Заголовок *</label>
             <input
               type="text"
               className="input"
               value={form.titel}
               onChange={e => setForm(f => ({ ...f, titel: e.target.value }))}
-              placeholder="Wat moet er gedaan worden?"
+              placeholder="Что нужно сделать?"
             />
           </div>
 
           <div>
-            <label className="label">Omschrijving</label>
+            <label className="label">Описание</label>
             <textarea
               className="input"
               rows={3}
               value={form.omschrijving}
               onChange={e => setForm(f => ({ ...f, omschrijving: e.target.value }))}
-              placeholder="Extra details..."
+              placeholder="Дополнительные детали..."
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="label">Prioriteit</label>
+              <label className="label">Приоритет</label>
               <select
                 className="input"
                 value={form.prioriteit}
                 onChange={e => setForm(f => ({ ...f, prioriteit: e.target.value as Prioriteit }))}
               >
-                <option value="laag">Laag</option>
-                <option value="normaal">Normaal</option>
-                <option value="hoog">Hoog</option>
-                <option value="urgent">Urgent</option>
+                <option value="laag">Низкий</option>
+                <option value="normaal">Обычный</option>
+                <option value="hoog">Высокий</option>
+                <option value="urgent">Срочный</option>
               </select>
             </div>
             <div>
-              <label className="label">Deadline</label>
+              <label className="label">Дедлайн</label>
               <input
                 type="date"
                 className="input"
@@ -425,60 +445,61 @@ export default function TodoPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="label">Toegewezen aan</label>
+              <label className="label">Назначено</label>
               <input
                 type="text"
                 className="input"
                 value={form.toegewezen_aan}
                 onChange={e => setForm(f => ({ ...f, toegewezen_aan: e.target.value }))}
-                placeholder="Naam teamlid"
+                placeholder="Имя участника"
               />
             </div>
             <div>
-              <label className="label">Afdeling</label>
+              <label className="label">Отдел</label>
               <input
                 type="text"
                 className="input"
                 value={form.afdeling}
                 onChange={e => setForm(f => ({ ...f, afdeling: e.target.value }))}
-                placeholder="bijv. tech, sales"
+                placeholder="напр. tech, sales"
               />
             </div>
           </div>
 
           <div className="flex gap-3 pt-2 border-t">
             <button type="button" onClick={() => setShowModal(false)} className="btn-secondary flex-1">
-              Annuleren
+              Отмена
             </button>
             <button type="submit" disabled={saving} className="btn-primary flex-1 disabled:opacity-50">
-              {saving ? 'Opslaan...' : 'Taak aanmaken'}
+              {saving ? 'Сохранение...' : 'Создать задачу'}
             </button>
           </div>
         </form>
       </Modal>
+
       {/* Detail view Modal */}
       {viewTodo && (
-        <Modal open={!!viewTodo} onClose={() => setViewTodo(null)} title="📋 Taak details">
+        <Modal open={!!viewTodo} onClose={() => setViewTodo(null)} title="📋 Детали задачи">
           <div className="space-y-4">
             {/* Status + Prioriteit badges */}
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`badge capitalize ${
+              <span className={`badge ${
                 viewTodo.prioriteit === 'urgent' ? 'bg-red-100 text-red-700' :
                 viewTodo.prioriteit === 'hoog' ? 'bg-orange-100 text-orange-700' :
                 viewTodo.prioriteit === 'normaal' ? 'bg-blue-100 text-blue-700' :
                 'bg-gray-100 text-gray-600'
-              }`}>{viewTodo.prioriteit}</span>
-              <span className={`badge capitalize ${
+              }`}>{prioriteitLabels[viewTodo.prioriteit]}</span>
+              <span className={`badge ${
                 viewTodo.status === 'gedaan' ? 'bg-green-100 text-green-700' :
                 viewTodo.status === 'bezig' ? 'bg-yellow-100 text-yellow-700' :
                 'bg-slate-100 text-slate-600'
-              }`}>{viewTodo.status}</span>
+              }`}>{statusLabels[viewTodo.status]}</span>
               {viewTodo.afdeling && <span className="badge bg-purple-100 text-purple-700">{viewTodo.afdeling}</span>}
             </div>
 
             {/* Titel */}
             <div>
-              <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Taak</p>
+              <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Задача</p>
               <p className={`font-bold text-[#1B2A4A] text-lg ${viewTodo.status === 'gedaan' ? 'line-through text-gray-400' : ''}`}>
                 {viewTodo.titel}
               </p>
@@ -487,14 +508,14 @@ export default function TodoPage() {
             {/* Omschrijving / Notities */}
             {viewTodo.omschrijving ? (
               <div>
-                <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Omschrijving / Notities</p>
+                <p className="text-xs text-gray-400 uppercase font-semibold mb-1">Описание / Заметки</p>
                 <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
                   {viewTodo.omschrijving}
                 </div>
               </div>
             ) : (
               <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-400 italic">
-                Geen omschrijving toegevoegd
+                Описание не добавлено
               </div>
             )}
 
@@ -502,18 +523,18 @@ export default function TodoPage() {
             <div className="grid grid-cols-2 gap-3 text-sm">
               {viewTodo.toegewezen_aan && (
                 <div>
-                  <p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Toegewezen aan</p>
+                  <p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Назначено</p>
                   <p className="font-medium text-[#1B2A4A]">👤 {viewTodo.toegewezen_aan}</p>
                 </div>
               )}
               {viewTodo.deadline && (
                 <div>
-                  <p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Deadline</p>
-                  <p className="font-medium text-[#1B2A4A]">📅 {new Date(viewTodo.deadline).toLocaleDateString('nl-NL')}</p>
+                  <p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Дедлайн</p>
+                  <p className="font-medium text-[#1B2A4A]">📅 {new Date(viewTodo.deadline).toLocaleDateString('ru-RU')}</p>
                 </div>
               )}
               <div>
-                <p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Aangemaakt door</p>
+                <p className="text-xs text-gray-400 uppercase font-semibold mb-0.5">Создано</p>
                 <p className="font-medium text-gray-600">✍️ {viewTodo.aangemaakt_door}</p>
               </div>
             </div>
@@ -523,24 +544,24 @@ export default function TodoPage() {
               {viewTodo.status === 'open' && (
                 <button onClick={() => { handleStatusChange(viewTodo, 'bezig'); setViewTodo({...viewTodo, status: 'bezig'}) }}
                   className="flex-1 text-sm py-2 rounded-lg bg-yellow-50 text-yellow-700 hover:bg-yellow-100 font-medium">
-                  ▶ Start
+                  ▶ Начать
                 </button>
               )}
               {viewTodo.status === 'bezig' && (
                 <button onClick={() => { handleStatusChange(viewTodo, 'gedaan'); setViewTodo({...viewTodo, status: 'gedaan'}) }}
                   className="flex-1 text-sm py-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 font-medium">
-                  ✅ Afronden
+                  ✅ Завершить
                 </button>
               )}
               {viewTodo.status === 'gedaan' && (
                 <button onClick={() => { handleStatusChange(viewTodo, 'open'); setViewTodo({...viewTodo, status: 'open'}) }}
                   className="flex-1 text-sm py-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 font-medium">
-                  ↩ Heropenen
+                  ↩ Переоткрыть
                 </button>
               )}
               <button onClick={() => { setViewTodo(null); openEdit(viewTodo) }}
                 className="text-sm py-2 px-4 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-medium">
-                ✏️ Bewerken
+                ✏️ Изменить
               </button>
             </div>
           </div>
@@ -548,10 +569,10 @@ export default function TodoPage() {
       )}
 
       {/* Bewerk Modal */}
-      <Modal open={showEditModal} onClose={() => setShowEditModal(false)} title="Taak bewerken">
+      <Modal open={showEditModal} onClose={() => setShowEditModal(false)} title="Изменить задачу">
         <div className="space-y-4">
           <div>
-            <label className="label">Titel *</label>
+            <label className="label">Заголовок *</label>
             <input
               type="text"
               className="input"
@@ -560,31 +581,31 @@ export default function TodoPage() {
             />
           </div>
           <div>
-            <label className="label">Omschrijving / Notities</label>
+            <label className="label">Описание / Заметки</label>
             <textarea
               className="input"
               rows={4}
               value={editForm.omschrijving ?? ''}
               onChange={e => setEditForm(f => ({ ...f, omschrijving: e.target.value }))}
-              placeholder="Voeg notities of extra details toe..."
+              placeholder="Добавьте заметки или детали..."
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="label">Prioriteit</label>
+              <label className="label">Приоритет</label>
               <select
                 className="input"
                 value={editForm.prioriteit ?? 'normaal'}
                 onChange={e => setEditForm(f => ({ ...f, prioriteit: e.target.value as Prioriteit }))}
               >
-                <option value="laag">Laag</option>
-                <option value="normaal">Normaal</option>
-                <option value="hoog">Hoog</option>
-                <option value="urgent">Urgent</option>
+                <option value="laag">Низкий</option>
+                <option value="normaal">Обычный</option>
+                <option value="hoog">Высокий</option>
+                <option value="urgent">Срочный</option>
               </select>
             </div>
             <div>
-              <label className="label">Deadline</label>
+              <label className="label">Дедлайн</label>
               <input
                 type="date"
                 className="input"
@@ -595,7 +616,7 @@ export default function TodoPage() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="label">Toegewezen aan</label>
+              <label className="label">Назначено</label>
               <input
                 type="text"
                 className="input"
@@ -604,7 +625,7 @@ export default function TodoPage() {
               />
             </div>
             <div>
-              <label className="label">Afdeling</label>
+              <label className="label">Отдел</label>
               <input
                 type="text"
                 className="input"
@@ -615,10 +636,10 @@ export default function TodoPage() {
           </div>
           <div className="flex gap-3 pt-2 border-t">
             <button type="button" onClick={() => setShowEditModal(false)} className="btn-secondary flex-1">
-              Annuleren
+              Отмена
             </button>
             <button onClick={handleEditSave} disabled={editSaving} className="btn-primary flex-1 disabled:opacity-50">
-              {editSaving ? 'Opslaan...' : 'Wijzigingen opslaan'}
+              {editSaving ? 'Сохранение...' : 'Сохранить изменения'}
             </button>
           </div>
         </div>

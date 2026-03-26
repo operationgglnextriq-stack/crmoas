@@ -67,7 +67,7 @@ export default function LeadsPage() {
       deal_status: 'call', closer_naam: lead.closer_naam,
       setter_naam: lead.setter_naam, kanaal: lead.kanaal,
     })
-    if (!error) alert(`Deal aangemaakt voor ${lead.bedrijfsnaam}!`)
+    if (!error) alert(`Сделка создана для ${lead.bedrijfsnaam}!`)
   }
 
   if (loading) return <LoadingSpinner />
@@ -75,43 +75,43 @@ export default function LeadsPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-gray-500 text-sm">{filtered.length} leads gevonden</p>
-        <Link href="/leads/nieuw" className="btn-primary">+ Nieuwe lead</Link>
+        <p className="text-gray-500 text-sm">{filtered.length} лидов найдено</p>
+        <Link href="/leads/nieuw" className="btn-primary">+ Новый лид</Link>
       </div>
       <div className="card !p-4">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <input placeholder="🔍 Bedrijfsnaam..." value={search} onChange={e => setSearch(e.target.value)} className="input" />
+          <input placeholder="🔍 Название компании..." value={search} onChange={e => setSearch(e.target.value)} className="input" />
           {isManager && (
             <select value={filterSetter} onChange={e => setFilterSetter(e.target.value)} className="input">
-              <option value="">Alle setters</option>
+              <option value="">Все сеттеры</option>
               {setters.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           )}
           <select value={filterKanaal} onChange={e => setFilterKanaal(e.target.value)} className="input">
-            <option value="">Alle kanalen</option>
+            <option value="">Все каналы</option>
             {['instagram_dm','tiktok','linkedin','biolink','outbound','referral','checkout','whatsapp','web_form'].map(k => (
               <option key={k} value={k}>{k.replace(/_/g,' ')}</option>
             ))}
           </select>
           <select value={filterSector} onChange={e => setFilterSector(e.target.value)} className="input">
-            <option value="">Alle sectoren</option>
+            <option value="">Все секторы</option>
             {['ecommerce','horeca','zakelijk','zorg','bouw','retail','tech','schoonmaak','finance','overig'].map(s => (
               <option key={s} value={s}>{s}</option>
             ))}
           </select>
           <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="input">
-            <option value="">Alle statussen</option>
+            <option value="">Все статусы</option>
             {['warm','followup_1','followup_2','followup_3','geboekt','niet','afwijzing'].map(s => (
               <option key={s} value={s}>{s.replace('_',' ')}</option>
             ))}
           </select>
           <label className="flex items-center gap-2 text-sm cursor-pointer">
             <input type="checkbox" checked={filterKoud} onChange={e => setFilterKoud(e.target.checked)} className="rounded" />
-            Alleen koud
+            Только холодные
           </label>
           <label className="flex items-center gap-2 text-sm cursor-pointer">
             <input type="checkbox" checked={showDuplicaten} onChange={e => setShowDuplicaten(e.target.checked)} className="rounded" />
-            Alleen duplicaten
+            Только дубликаты
           </label>
         </div>
       </div>
@@ -120,14 +120,14 @@ export default function LeadsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Bedrijf</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Setter</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Kanaal</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Sector</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Компания</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Сеттер</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Канал</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Сектор</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">BANT</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Status</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Datum</th>
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Acties</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Статус</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Дата</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Действия</th>
               </tr>
             </thead>
             <tbody>
@@ -148,10 +148,10 @@ export default function LeadsPage() {
                   <td className="px-4 py-3 text-gray-500 text-xs">{format(new Date(lead.created_at), 'd MMM', { locale: nl })}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
-                      <Link href={`/leads/${lead.id}`} className="text-xs px-2 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100">Bekijk</Link>
+                      <Link href={`/leads/${lead.id}`} className="text-xs px-2 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100">Просмотр</Link>
                       {isManager && (
                         <>
-                          <button onClick={() => handleNaarDeal(lead)} className="text-xs px-2 py-1 rounded bg-green-50 text-green-700 hover:bg-green-100">→ Deal</button>
+                          <button onClick={() => handleNaarDeal(lead)} className="text-xs px-2 py-1 rounded bg-green-50 text-green-700 hover:bg-green-100">→ Сделка</button>
                           <button onClick={() => setDeleteTarget(lead)} className="text-xs px-2 py-1 rounded bg-red-50 text-red-700 hover:bg-red-100">×</button>
                         </>
                       )}
@@ -160,7 +160,7 @@ export default function LeadsPage() {
                 </tr>
               ))}
               {filtered.length === 0 && (
-                <tr><td colSpan={8} className="px-4 py-12 text-center text-gray-400">Geen leads gevonden</td></tr>
+                <tr><td colSpan={8} className="px-4 py-12 text-center text-gray-400">Лиды не найдены</td></tr>
               )}
             </tbody>
           </table>
@@ -170,8 +170,8 @@ export default function LeadsPage() {
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => deleteTarget && handleDelete(deleteTarget)}
-        title="Lead verwijderen"
-        message={`Weet je zeker dat je "${deleteTarget?.bedrijfsnaam}" wilt verwijderen?`}
+        title="Удалить лид"
+        message={`Вы уверены, что хотите удалить "${deleteTarget?.bedrijfsnaam}"?`}
       />
     </div>
   )

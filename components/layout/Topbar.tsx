@@ -3,19 +3,19 @@
 import { usePathname } from 'next/navigation'
 
 const pageTitles: Record<string, string> = {
-  '/dashboard': 'Dashboard',
-  '/leads': 'Leads',
-  '/leads/nieuw': 'Nieuwe Lead',
-  '/outreach': 'Outreach',
-  '/outreach/nieuw': 'Nieuw Contact',
-  '/pipeline': 'Pipeline',
-  '/deals': 'Deals Overzicht',
-  '/team': 'Team Beheer',
-  '/commissies': 'Commissies',
-  '/marktdata': 'Marktdata',
-  '/dagrapporten': 'Dagrapporten',
-  '/leaderboard': 'Leaderboard',
-  '/todo': 'Todo List',
+  '/dashboard': 'Дашборд',
+  '/leads': 'Лиды',
+  '/leads/nieuw': 'Новый лид',
+  '/outreach': 'Аутрич',
+  '/outreach/nieuw': 'Новый контакт',
+  '/pipeline': 'Пайплайн',
+  '/deals': 'Сделки',
+  '/team': 'Управление командой',
+  '/commissies': 'Комиссии',
+  '/marktdata': 'Данные рынка',
+  '/dagrapporten': 'Дневные отчёты',
+  '/leaderboard': 'Лидерборд',
+  '/todo': 'Список задач',
 }
 
 export default function Topbar({ sidebarCollapsed }: { sidebarCollapsed: boolean }) {
