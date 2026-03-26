@@ -76,11 +76,19 @@ export default function LeadsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-gray-500 text-sm">{filtered.length} leads gevonden</p>
-        <Link href="/leads/nieuw" className="btn-primary">+ Nieuwe lead</Link>
+        {/* Desktop new lead button */}
+        <Link href="/leads/nieuw" className="btn-primary hidden md:inline-flex">+ Nieuwe lead</Link>
       </div>
-      <div className="card !p-4">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <input placeholder="🔍 Bedrijfsnaam..." value={search} onChange={e => setSearch(e.target.value)} className="input" />
+
+      {/* Filter bar — sticky on mobile */}
+      <div className="card !p-3 md:!p-4 sticky top-12 md:top-16 z-10 shadow-md md:shadow-sm">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-3">
+          <input
+            placeholder="🔍 Bedrijfsnaam..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="input col-span-2 md:col-span-1"
+          />
           {isManager && (
             <select value={filterSetter} onChange={e => setFilterSetter(e.target.value)} className="input">
               <option value="">Alle setters</option>
@@ -105,17 +113,89 @@ export default function LeadsPage() {
               <option key={s} value={s}>{s.replace('_',' ')}</option>
             ))}
           </select>
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input type="checkbox" checked={filterKoud} onChange={e => setFilterKoud(e.target.checked)} className="rounded" />
-            Alleen koud
-          </label>
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input type="checkbox" checked={showDuplicaten} onChange={e => setShowDuplicaten(e.target.checked)} className="rounded" />
-            Alleen duplicaten
-          </label>
+          <div className="col-span-2 md:col-span-1 flex gap-3 items-center">
+            <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+              <input type="checkbox" checked={filterKoud} onChange={e => setFilterKoud(e.target.checked)} className="rounded" />
+              Koud
+            </label>
+            <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+              <input type="checkbox" checked={showDuplicaten} onChange={e => setShowDuplicaten(e.target.checked)} className="rounded" />
+              Duplicaten
+            </label>
+          </div>
         </div>
       </div>
-      <div className="card !p-0 overflow-hidden">
+
+      {/* Mobile card view */}
+      <div className="md:hidden space-y-3">
+        {filtered.map(lead => (
+          <div key={lead.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <div className="flex-1 min-w-0">
+                <span className="font-semibold text-[#1B2A4A] text-sm leading-tight block truncate">
+                  {lead.bedrijfsnaam}
+                </span>
+                {lead.is_duplicaat && (
+                  <span className="badge bg-orange-100 text-orange-800 text-xs mt-0.5">Duplicaat</span>
+                )}
+                {lead.contactpersoon && (
+                  <p className="text-xs text-gray-400 mt-0.5 truncate">{lead.contactpersoon}</p>
+                )}
+              </div>
+              <KwalificatieBadge status={lead.kwalificatiestatus} />
+            </div>
+            <div className="flex items-center gap-2 flex-wrap mb-3">
+              <BANTBadge score={calcBANT(lead)} />
+              {lead.kanaal && (
+                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                  {lead.kanaal.replace(/_/g,' ')}
+                </span>
+              )}
+              {lead.sector && (
+                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                  {lead.sector}
+                </span>
+              )}
+              <span className="text-xs text-gray-400 ml-auto">
+                {format(new Date(lead.created_at), 'd MMM', { locale: nl })}
+              </span>
+            </div>
+            {lead.setter_naam && (
+              <p className="text-xs text-gray-500 mb-3">🎯 {lead.setter_naam}</p>
+            )}
+            <div className="flex gap-2 border-t border-gray-100 pt-3">
+              <Link
+                href={`/leads/${lead.id}`}
+                className="flex-1 text-center text-xs py-2 rounded-lg bg-blue-50 text-blue-700 font-medium"
+              >
+                Bekijk
+              </Link>
+              {isManager && (
+                <>
+                  <button
+                    onClick={() => handleNaarDeal(lead)}
+                    className="flex-1 text-xs py-2 rounded-lg bg-green-50 text-green-700 font-medium"
+                  >
+                    → Deal
+                  </button>
+                  <button
+                    onClick={() => setDeleteTarget(lead)}
+                    className="px-4 text-xs py-2 rounded-lg bg-red-50 text-red-700 font-medium"
+                  >
+                    ×
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        ))}
+        {filtered.length === 0 && (
+          <div className="text-center py-12 text-gray-400">Geen leads gevonden</div>
+        )}
+      </div>
+
+      {/* Desktop table view */}
+      <div className="card !p-0 overflow-hidden hidden md:block">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -166,6 +246,7 @@ export default function LeadsPage() {
           </table>
         </div>
       </div>
+
       <ConfirmModal
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
@@ -173,6 +254,15 @@ export default function LeadsPage() {
         title="Lead verwijderen"
         message={`Weet je zeker dat je "${deleteTarget?.bedrijfsnaam}" wilt verwijderen?`}
       />
+
+      {/* Floating Action Button — mobile only */}
+      <Link
+        href="/leads/nieuw"
+        className="fixed bottom-20 right-4 w-14 h-14 bg-[#6B3FA0] text-white rounded-full shadow-lg flex items-center justify-center text-2xl font-bold md:hidden z-30 active:scale-95 transition-transform"
+        aria-label="Nieuwe lead"
+      >
+        +
+      </Link>
     </div>
   )
 }
