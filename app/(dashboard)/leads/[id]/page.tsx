@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from 'react'
 import { apiFetch } from '@/lib/apiFetch'
-import { Lead, Deal, KwalificatieStatus, Sector, Kanaal, ProductInteresse, BantBudget, BantAutoriteit, BantTiming } from '@/types'
+import { Lead, Deal, KwalificatieStatus, Sector, Kanaal, ProductInteresse, BantBudget, BantAutoriteit, BantTiming, LeadActie, ActieType } from '@/types'
 import { BANTBadge, KwalificatieBadge } from '@/components/ui/Badge'
 import { calcBANT } from '@/types'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
@@ -13,6 +13,15 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { format } from 'date-fns'
 import { nl } from 'date-fns/locale'
+
+const ACTIE_LABELS: Record<ActieType, string> = {
+  eerste_contact: 'Eerste contact',
+  follow_up_1: 'Follow-up 1',
+  follow_up_2: 'Follow-up 2',
+  follow_up_3: 'Follow-up 3',
+  terugbellen: 'Terugbellen',
+  offerte_sturen: 'Offerte sturen',
+}
 
 export default function LeadDetailPage({ params }: { params: { id: string } }) {
   const [lead, setLead] = useState<Lead | null>(null)
@@ -29,6 +38,18 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
   const [showDealModal, setShowDealModal] = useState(false)
   const [dealForm, setDealForm] = useState<Partial<Deal>>({ deal_status: 'call', betaling_ontvangen: false, commissie_betaald: false, recurring: false })
   const [dealSaving, setDealSaving] = useState(false)
+
+  // Acties state
+  const [acties, setActies] = useState<LeadActie[]>([])
+  const [actiesLoading, setActiesLoading] = useState(true)
+  const [showActieForm, setShowActieForm] = useState(false)
+  const [actieForm, setActieForm] = useState({
+    type: 'eerste_contact' as ActieType,
+    gepland_op: '',
+    toegewezen_aan: '',
+    notitie: '',
+  })
+  const [actieSaving, setActieSaving] = useState(false)
 
   const canDoorSturen = teamMember && !['outreacher', 'ambassadeur', 'creator'].includes(teamMember.rol)
 
@@ -118,7 +139,25 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
     setLoading(false)
   }
 
-  useEffect(() => { fetchLead() }, [params.id])
+  const fetchActies = async () => {
+    setActiesLoading(true)
+    const res = await apiFetch(`/api/lead-acties?lead_id=${params.id}`)
+    const data = await res.json()
+    setActies(Array.isArray(data) ? data : [])
+    setActiesLoading(false)
+  }
+
+  useEffect(() => {
+    fetchLead()
+    fetchActies()
+    // Pre-fill toegewezen_aan when teamMember loads
+  }, [params.id])
+
+  useEffect(() => {
+    if (teamMember) {
+      setActieForm(f => ({ ...f, toegewezen_aan: teamMember.naam }))
+    }
+  }, [teamMember])
 
   const handleSave = async () => {
     setSaving(true)
@@ -142,6 +181,30 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
       return
     }
     router.push('/leads')
+  }
+
+  const handleActieSave = async () => {
+    if (!actieForm.gepland_op || !actieForm.toegewezen_aan) return
+    setActieSaving(true)
+    await apiFetch('/api/lead-acties', {
+      method: 'POST',
+      body: JSON.stringify({
+        lead_id: params.id,
+        type: actieForm.type,
+        gepland_op: actieForm.gepland_op,
+        toegewezen_aan: actieForm.toegewezen_aan,
+        notitie: actieForm.notitie || null,
+      }),
+    })
+    setActieSaving(false)
+    setShowActieForm(false)
+    setActieForm({ type: 'eerste_contact', gepland_op: '', toegewezen_aan: teamMember?.naam ?? '', notitie: '' })
+    fetchActies()
+  }
+
+  const handleActieGedaan = async (actieId: string) => {
+    await apiFetch(`/api/lead-acties/${actieId}`, { method: 'PATCH' })
+    fetchActies()
   }
 
   if (loading) return <LoadingSpinner />
@@ -209,8 +272,6 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
         )}
       </div>
 
-      {/* Bewerk modal */}
-
       {/* Deals / Producten sectie */}
       <div className="card space-y-4">
         <div className="flex items-center justify-between">
@@ -253,6 +314,120 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
         )}
       </div>
 
+      {/* Acties & Follow-ups sectie */}
+      <div className="card space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-[#1B2A4A]">📋 Acties & Follow-ups</h3>
+          <button
+            onClick={() => setShowActieForm(v => !v)}
+            className="text-sm px-3 py-2 rounded-lg bg-[#1B2A4A] text-white hover:bg-[#253a68]"
+          >
+            + Actie toevoegen
+          </button>
+        </div>
+
+        {/* Inline actie form */}
+        {showActieForm && (
+          <div className="border border-gray-200 rounded-xl p-4 bg-gray-50 space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="label">Type</label>
+                <select
+                  className="input"
+                  value={actieForm.type}
+                  onChange={e => setActieForm(f => ({ ...f, type: e.target.value as ActieType }))}
+                >
+                  {(Object.entries(ACTIE_LABELS) as [ActieType, string][]).map(([val, label]) => (
+                    <option key={val} value={val}>{label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="label">Datum & tijd</label>
+                <input
+                  type="datetime-local"
+                  className="input"
+                  value={actieForm.gepland_op}
+                  onChange={e => setActieForm(f => ({ ...f, gepland_op: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="label">Toegewezen aan</label>
+                <input
+                  className="input"
+                  value={actieForm.toegewezen_aan}
+                  onChange={e => setActieForm(f => ({ ...f, toegewezen_aan: e.target.value }))}
+                  placeholder="Naam medewerker"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="label">Notitie</label>
+              <textarea
+                className="input"
+                rows={2}
+                value={actieForm.notitie}
+                onChange={e => setActieForm(f => ({ ...f, notitie: e.target.value }))}
+                placeholder="Optionele notitie..."
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button onClick={() => setShowActieForm(false)} className="btn-secondary text-sm">Annuleren</button>
+              <button onClick={handleActieSave} disabled={actieSaving} className="btn-primary text-sm disabled:opacity-50">
+                {actieSaving ? 'Opslaan...' : 'Opslaan'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Acties list */}
+        {actiesLoading ? (
+          <p className="text-sm text-gray-400 text-center py-4">Laden...</p>
+        ) : acties.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-4">Geen acties gepland voor deze lead</p>
+        ) : (
+          <div className="space-y-2">
+            {acties.map(actie => (
+              <div
+                key={actie.id}
+                className={`flex items-start justify-between p-3 rounded-lg border ${
+                  actie.status === 'gedaan'
+                    ? 'border-green-100 bg-green-50/50 opacity-70'
+                    : 'border-gray-100 bg-white'
+                }`}
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-medium text-[#1B2A4A]">{ACTIE_LABELS[actie.type]}</span>
+                    <span className="text-xs text-gray-500">
+                      📅 {format(new Date(actie.gepland_op), 'd MMM yyyy HH:mm', { locale: nl })}
+                    </span>
+                    <span className="text-xs text-gray-500">👤 {actie.toegewezen_aan}</span>
+                    {actie.status === 'gedaan' ? (
+                      <span className="badge bg-green-100 text-green-700 text-xs">✓ Gedaan</span>
+                    ) : (
+                      <span className="badge bg-orange-100 text-orange-700 text-xs">Open</span>
+                    )}
+                  </div>
+                  {actie.notitie && (
+                    <p className="text-xs text-gray-500 mt-1 truncate">{actie.notitie}</p>
+                  )}
+                </div>
+                {actie.status === 'open' && (
+                  <button
+                    onClick={() => handleActieGedaan(actie.id)}
+                    className="ml-3 text-xs px-2 py-1 rounded bg-green-100 text-green-700 hover:bg-green-200 flex-shrink-0"
+                  >
+                    ✓ Gedaan
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Bewerk modal */}
       <Modal open={showEdit} onClose={() => setShowEdit(false)} title="Lead bewerken" size="lg">
         <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
           <div className="grid grid-cols-2 gap-4">
@@ -329,7 +504,6 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
           </div>
         </div>
       </Modal>
-
 
       {/* Deal aanmaak modal */}
       <Modal open={showDealModal} onClose={() => setShowDealModal(false)} title="Product toevoegen">

@@ -4,13 +4,23 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/context/AuthContext'
-import { OutreachLead } from '@/types'
+import { OutreachLead, ProductInteresse } from '@/types'
 import { OutreachStatusBadge } from '@/components/ui/Badge'
 import { ConfirmModal } from '@/components/ui/Modal'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { nl } from 'date-fns/locale'
+
+const PRODUCT_PILLS: { label: string; value: ProductInteresse | '' }[] = [
+  { label: 'Alle producten', value: '' },
+  { label: 'Website', value: 'website' },
+  { label: 'AI Scan', value: 'ai_scan' },
+  { label: 'AI Agency', value: 'ai_agency' },
+  { label: 'InkApprove', value: 'ink' },
+  { label: 'Community', value: 'community' },
+  { label: 'Onbekend', value: 'onbekend' },
+]
 
 export default function OutreachPage() {
   const { teamMember } = useAuth()
@@ -21,6 +31,7 @@ export default function OutreachPage() {
   const [filterOutreacher, setFilterOutreacher] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterMethode, setFilterMethode] = useState('')
+  const [filterProduct, setFilterProduct] = useState<ProductInteresse | ''>('')
   const [outreachers, setOutreachers] = useState<string[]>([])
   const [deleteTarget, setDeleteTarget] = useState<OutreachLead | null>(null)
 
@@ -42,6 +53,7 @@ export default function OutreachPage() {
     if (filterOutreacher && i.outreacher_naam !== filterOutreacher) return false
     if (filterStatus && i.status !== filterStatus) return false
     if (filterMethode && i.methode !== filterMethode) return false
+    if (filterProduct && i.product_interesse !== filterProduct) return false
     return true
   })
 
@@ -61,6 +73,7 @@ export default function OutreachPage() {
       emailadres: item.emailadres, sector: item.sector,
       setter_naam: item.outreacher_naam, kanaal: 'outbound',
       pijnpunt: item.pijnpunt, notities: item.notities, afdeling: 'outreach',
+      product_interesse: item.product_interesse ?? null,
     }).select().single()
     if (!error && lead) {
       await supabase.from('outreach_leads').update({ omgezet_naar_lead: true, lead_id: lead.id }).eq('id', item.id)
@@ -104,6 +117,23 @@ export default function OutreachPage() {
         <Link href="/outreach/nieuw" className="btn-primary">+ Nieuw contact</Link>
       </div>
 
+      {/* Product filter pills */}
+      <div className="flex flex-wrap gap-2">
+        {PRODUCT_PILLS.map(pill => (
+          <button
+            key={pill.value}
+            onClick={() => setFilterProduct(pill.value)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+              filterProduct === pill.value
+                ? 'bg-[#1B2A4A] text-white'
+                : 'border border-gray-300 text-gray-600 hover:border-[#1B2A4A] hover:text-[#1B2A4A]'
+            }`}
+          >
+            {pill.label}
+          </button>
+        ))}
+      </div>
+
       <div className="card !p-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <input placeholder="🔍 Bedrijfsnaam..." value={search} onChange={e => setSearch(e.target.value)} className="input" />
@@ -136,6 +166,7 @@ export default function OutreachPage() {
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">Bedrijf</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">Outreacher</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">Methode</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Product</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">Status</th>
                 <th className="text-right px-4 py-3 font-semibold text-gray-700">Pogingen</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">Laatste contact</th>
@@ -155,6 +186,15 @@ export default function OutreachPage() {
                   </td>
                   <td className="px-4 py-3 text-gray-600">{item.outreacher_naam}</td>
                   <td className="px-4 py-3 text-gray-500 text-xs">{item.methode?.replace(/_/g,' ')}</td>
+                  <td className="px-4 py-3">
+                    {item.product_interesse ? (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">
+                        {item.product_interesse.replace(/_/g,' ')}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-gray-400">-</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3"><OutreachStatusBadge status={item.status} /></td>
                   <td className="px-4 py-3 text-center font-semibold text-gray-700">{item.pogingen}</td>
                   <td className="px-4 py-3 text-gray-500 text-xs">
@@ -176,7 +216,7 @@ export default function OutreachPage() {
                 </tr>
               ))}
               {filtered.length === 0 && (
-                <tr><td colSpan={8} className="px-4 py-12 text-center text-gray-400">Geen contacten gevonden</td></tr>
+                <tr><td colSpan={9} className="px-4 py-12 text-center text-gray-400">Geen contacten gevonden</td></tr>
               )}
             </tbody>
           </table>

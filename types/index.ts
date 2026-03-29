@@ -73,6 +73,7 @@ export interface OutreachLead {
   notities: string | null
   omgezet_naar_lead: boolean
   lead_id: string | null
+  product_interesse?: ProductInteresse | null
 }
 
 export type Product = 'website_std' | 'website_maat' | 'hosting' | 'ai_scan_pro' | 'ai_scan_dig' | 'ai_agency' | 'ink' | 'comm_klant' | 'comm_extern'
@@ -160,4 +161,20 @@ export function calcWebDevCommissie(deal_waarde: number | null, product: Product
   if (!deal_waarde || !product) return 0
   if (!WEBSITE_PRODUCTEN.includes(product)) return 0
   return Math.round(deal_waarde * 0.25)
+}
+
+// Feature 3: Lead Acties
+export type ActieType = 'eerste_contact' | 'follow_up_1' | 'follow_up_2' | 'follow_up_3' | 'terugbellen' | 'offerte_sturen'
+export type ActieStatus = 'open' | 'gedaan'
+
+export interface LeadActie {
+  id: string
+  created_at: string
+  lead_id: string
+  toegewezen_aan: string
+  type: ActieType
+  gepland_op: string
+  notitie: string | null
+  status: ActieStatus
+  afgerond_op: string | null
 }

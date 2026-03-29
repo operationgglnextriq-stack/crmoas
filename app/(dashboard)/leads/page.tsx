@@ -5,7 +5,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { apiFetch } from '@/lib/apiFetch'
 import { useAuth } from '@/context/AuthContext'
-import { Lead } from '@/types'
+import { Lead, ProductInteresse } from '@/types'
 import { BANTBadge, KwalificatieBadge } from '@/components/ui/Badge'
 import { calcBANT } from '@/types'
 import { ConfirmModal } from '@/components/ui/Modal'
@@ -13,6 +13,16 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { nl } from 'date-fns/locale'
+
+const PRODUCT_PILLS: { label: string; value: ProductInteresse | '' }[] = [
+  { label: 'Alle producten', value: '' },
+  { label: 'Website', value: 'website' },
+  { label: 'AI Scan', value: 'ai_scan' },
+  { label: 'AI Agency', value: 'ai_agency' },
+  { label: 'InkApprove', value: 'ink' },
+  { label: 'Community', value: 'community' },
+  { label: 'Onbekend', value: 'onbekend' },
+]
 
 export default function LeadsPage() {
   const { teamMember, loading: authLoading } = useAuth()
@@ -24,6 +34,7 @@ export default function LeadsPage() {
   const [filterKanaal, setFilterKanaal] = useState('')
   const [filterSector, setFilterSector] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
+  const [filterProduct, setFilterProduct] = useState<ProductInteresse | ''>('')
   const [showDuplicaten, setShowDuplicaten] = useState(false)
   const [filterKoud, setFilterKoud] = useState(false)
   const [setters, setSetters] = useState<string[]>([])
@@ -52,6 +63,7 @@ export default function LeadsPage() {
     if (filterKanaal && l.kanaal !== filterKanaal) return false
     if (filterSector && l.sector !== filterSector) return false
     if (filterStatus && l.kwalificatiestatus !== filterStatus) return false
+    if (filterProduct && l.product_interesse !== filterProduct) return false
     if (showDuplicaten && !l.is_duplicaat) return false
     if (filterKoud && !(l.kanaal === 'outbound' || l.kwalificatiestatus?.startsWith('followup'))) return false
     return true
@@ -79,6 +91,23 @@ export default function LeadsPage() {
         <p className="text-gray-500 text-sm">{filtered.length} leads gevonden</p>
         {/* Desktop new lead button */}
         <Link href="/leads/nieuw" className="btn-primary hidden md:inline-flex">+ Nieuwe lead</Link>
+      </div>
+
+      {/* Product filter pills */}
+      <div className="flex flex-wrap gap-2">
+        {PRODUCT_PILLS.map(pill => (
+          <button
+            key={pill.value}
+            onClick={() => setFilterProduct(pill.value)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+              filterProduct === pill.value
+                ? 'bg-[#1B2A4A] text-white'
+                : 'border border-gray-300 text-gray-600 hover:border-[#1B2A4A] hover:text-[#1B2A4A]'
+            }`}
+          >
+            {pill.label}
+          </button>
+        ))}
       </div>
 
       {/* Filter bar — sticky on mobile */}
@@ -147,6 +176,11 @@ export default function LeadsPage() {
             </div>
             <div className="flex items-center gap-2 flex-wrap mb-3">
               <BANTBadge score={calcBANT(lead)} />
+              {lead.product_interesse && (
+                <span className="text-xs text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
+                  {lead.product_interesse.replace(/_/g,' ')}
+                </span>
+              )}
               {lead.kanaal && (
                 <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
                   {lead.kanaal.replace(/_/g,' ')}
@@ -205,6 +239,7 @@ export default function LeadsPage() {
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">Setter</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">Kanaal</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">Sector</th>
+                <th className="text-left px-4 py-3 font-semibold text-gray-700">Product</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">BANT</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">Status</th>
                 <th className="text-left px-4 py-3 font-semibold text-gray-700">Datum</th>
@@ -224,6 +259,15 @@ export default function LeadsPage() {
                   <td className="px-4 py-3 text-gray-600">{lead.setter_naam}</td>
                   <td className="px-4 py-3 text-gray-500 text-xs">{lead.kanaal?.replace(/_/g,' ')}</td>
                   <td className="px-4 py-3 text-gray-500 text-xs">{lead.sector}</td>
+                  <td className="px-4 py-3">
+                    {lead.product_interesse ? (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">
+                        {lead.product_interesse.replace(/_/g,' ')}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-gray-400">-</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3"><BANTBadge score={calcBANT(lead)} /></td>
                   <td className="px-4 py-3"><KwalificatieBadge status={lead.kwalificatiestatus} /></td>
                   <td className="px-4 py-3 text-gray-500 text-xs">{format(new Date(lead.created_at), 'd MMM', { locale: nl })}</td>
@@ -241,7 +285,7 @@ export default function LeadsPage() {
                 </tr>
               ))}
               {filtered.length === 0 && (
-                <tr><td colSpan={8} className="px-4 py-12 text-center text-gray-400">Geen leads gevonden</td></tr>
+                <tr><td colSpan={9} className="px-4 py-12 text-center text-gray-400">Geen leads gevonden</td></tr>
               )}
             </tbody>
           </table>
