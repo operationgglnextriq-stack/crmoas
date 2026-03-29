@@ -23,7 +23,7 @@ export default function NieuweLeadPage() {
     bedrijfsnaam: '', website: '', contactpersoon: '', telefoonnummer: '',
     emailadres: '', sector: '', kanaal: '', setter_naam: '',
     ambassadeur: '', creator: '', bant_budget: '', bant_autoriteit: '',
-    bant_need: '', bant_timing: '', pijnpunt: '', kwalificatiestatus: 'followup_1',
+    bant_need: '', bant_timing: '', pijnpunt: '', kwalificatiestatus: 'benaderd',
     product_interesse: '', closer_naam: '', datum_call: '', notities: '',
   })
 
@@ -244,7 +244,7 @@ export default function NieuweLeadPage() {
             <div>
               <label className="label">Kwalificatiestatus</label>
               <select className="input" value={form.kwalificatiestatus} onChange={e => set('kwalificatiestatus', e.target.value)}>
-                {['benaderd','warm','benaderd','followup_1','followup_2','followup_3','geboekt','niet','afwijzing'].map(s => <option key={s} value={s}>{s.replace('_',' ')}</option>)}
+                {['benaderd','followup_1','followup_2','followup_3','warm','geboekt','niet','afwijzing'].map(s => <option key={s} value={s}>{s.replace('_',' ')}</option>)}
               </select>
             </div>
           </>
