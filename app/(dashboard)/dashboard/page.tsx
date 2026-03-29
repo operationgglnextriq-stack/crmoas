@@ -369,6 +369,7 @@ export default function DashboardPage() {
         actieveVerkoopLeden={actieveVerkoopLeden}
         nietIngediend={nietIngediend}
         openActies={openActies}
+        gedaanVandaag={gedaanVandaag}
       />
 
       <FollowUpsOverzicht followupByStatus={followupByStatus} />
