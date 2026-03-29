@@ -19,6 +19,7 @@ interface LeadActieWithLead extends LeadActie {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const KWALI_CONFIG: { key: KwalificatieStatus; label: string; color: string; badge: string }[] = [
+  { key: 'benaderd',   label: 'Benaderd',              color: 'bg-gray-100 border-gray-300',      badge: 'bg-gray-500 text-white' },
   { key: 'followup_1', label: 'Follow-up 1',          color: 'bg-blue-100 border-blue-300',      badge: 'bg-blue-600 text-white' },
   { key: 'followup_2', label: 'Follow-up 2',          color: 'bg-blue-50 border-blue-200',       badge: 'bg-blue-400 text-white' },
   { key: 'followup_3', label: 'Follow-up 3',          color: 'bg-sky-50 border-sky-200',         badge: 'bg-sky-400 text-white' },
