@@ -158,7 +158,73 @@ export default function OutreachPage() {
         </div>
       </div>
 
-      <div className="card !p-0 overflow-hidden">
+      {/* Mobile card view */}
+      <div className="lg:hidden space-y-3">
+        {filtered.map(item => (
+          <div key={item.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <div className="flex-1 min-w-0">
+                <span className="font-semibold text-[#1B2A4A] text-sm leading-tight block truncate">
+                  {item.bedrijfsnaam}
+                </span>
+                {item.omgezet_naar_lead && (
+                  <span className="badge bg-green-100 text-green-700 text-xs mt-0.5">→ Lead</span>
+                )}
+                {item.contactpersoon && (
+                  <p className="text-xs text-gray-400 mt-0.5 truncate">{item.contactpersoon}</p>
+                )}
+              </div>
+              <OutreachStatusBadge status={item.status} />
+            </div>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {item.methode && (
+                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                  {item.methode.replace(/_/g, ' ')}
+                </span>
+              )}
+              {item.product_interesse && (
+                <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
+                  {item.product_interesse.replace(/_/g, ' ')}
+                </span>
+              )}
+              <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">
+                {item.pogingen} poging{item.pogingen !== 1 ? 'en' : ''}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs text-gray-400 mb-3">
+              <span>{item.outreacher_naam}</span>
+              {item.volgende_actie && (
+                <span>Volgende: {format(new Date(item.volgende_actie), 'd MMM', { locale: nl })}</span>
+              )}
+            </div>
+            <div className="flex gap-2 border-t border-gray-100 pt-3">
+              {!item.omgezet_naar_lead && (
+                <button
+                  onClick={() => handleOmzettenNaarLead(item)}
+                  className="flex-1 text-xs py-2 rounded-lg bg-green-50 text-green-700 font-medium"
+                >
+                  → Lead
+                </button>
+              )}
+              {isManager && (
+                <button
+                  onClick={() => setDeleteTarget(item)}
+                  className="px-4 text-xs py-2 rounded-lg bg-red-50 text-red-700 font-medium"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+        {filtered.length === 0 && (
+          <div className="text-center py-12 text-gray-400">Geen contacten gevonden</div>
+        )}
+      </div>
+
+      {/* Desktop table view */}
+
+      <div className="card !p-0 overflow-hidden hidden lg:block">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

@@ -90,7 +90,7 @@ export default function LeadsPage() {
       <div className="flex items-center justify-between">
         <p className="text-gray-500 text-sm">{filtered.length} leads gevonden</p>
         {/* Desktop new lead button */}
-        <Link href="/leads/nieuw" className="btn-primary hidden md:inline-flex">+ Nieuwe lead</Link>
+        <Link href="/leads/nieuw" className="btn-primary hidden lg:inline-flex">+ Nieuwe lead</Link>
       </div>
 
       {/* Product filter pills */}
@@ -111,7 +111,7 @@ export default function LeadsPage() {
       </div>
 
       {/* Filter bar — sticky on mobile */}
-      <div className="card !p-3 md:!p-4 sticky top-12 md:top-16 z-10 shadow-md md:shadow-sm">
+      <div className="card !p-3 md:!p-4 sticky top-12 lg:top-16 z-10 shadow-md md:shadow-sm">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-3">
           <input
             placeholder="🔍 Bedrijfsnaam..."
@@ -157,7 +157,7 @@ export default function LeadsPage() {
       </div>
 
       {/* Mobile card view */}
-      <div className="md:hidden space-y-3">
+      <div className="lg:hidden space-y-3">
         {filtered.map(lead => (
           <div key={lead.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
             <div className="flex items-start justify-between gap-2 mb-2">
@@ -230,7 +230,7 @@ export default function LeadsPage() {
       </div>
 
       {/* Desktop table view */}
-      <div className="card !p-0 overflow-hidden hidden md:block">
+      <div className="card !p-0 overflow-hidden hidden lg:block">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -303,7 +303,7 @@ export default function LeadsPage() {
       {/* Floating Action Button — mobile only */}
       <Link
         href="/leads/nieuw"
-        className="fixed bottom-20 right-4 w-14 h-14 bg-[#6B3FA0] text-white rounded-full shadow-lg flex items-center justify-center text-2xl font-bold md:hidden z-30 active:scale-95 transition-transform"
+        className="fixed bottom-6 right-4 w-14 h-14 bg-[#6B3FA0] text-white rounded-full shadow-lg flex items-center justify-center text-2xl font-bold lg:hidden z-30 active:scale-95 transition-transform"
         aria-label="Nieuwe lead"
       >
         +

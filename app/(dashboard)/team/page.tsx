@@ -229,7 +229,55 @@ export default function TeamPage() {
         </div>
       </div>
 
-      <div className="card !p-0 overflow-hidden">
+      {/* Mobile card view */}
+      <div className="lg:hidden space-y-3">
+        {displayTeam.map(lid => (
+          <div key={lid.id} className={`bg-white rounded-xl border border-gray-200 shadow-sm p-4 ${!lid.actief ? 'opacity-60' : ''}`}>
+            <div className="flex items-start justify-between gap-2 mb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#6B3FA0] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                  {lid.naam.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-semibold text-[#1B2A4A] text-sm">{lid.naam}</p>
+                  <p className="text-xs text-gray-400">{lid.email}</p>
+                </div>
+              </div>
+              {lid.actief
+                ? <span className="badge bg-green-100 text-green-700 text-xs flex-shrink-0">Actief</span>
+                : <span className="badge bg-gray-100 text-gray-500 text-xs flex-shrink-0">Inactief</span>
+              }
+            </div>
+            <div className="flex flex-wrap gap-2 mb-3">
+              <span className={`badge text-xs ${ROL_COLORS[lid.rol as Rol]}`}>{ROL_LABELS[lid.rol as Rol]}</span>
+              {isManager && (
+                <span className="text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full">
+                  {lid.commissie_pct}% commissie
+                </span>
+              )}
+              <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full font-semibold">
+                €{(lid.totale_omzet ?? 0).toLocaleString('nl-NL')}
+              </span>
+            </div>
+            <div className="flex gap-2 flex-wrap border-t border-gray-100 pt-3">
+              <button onClick={() => openEdit(lid)} className="text-xs py-2 px-3 rounded-lg bg-blue-50 text-blue-700 font-medium">Bewerk</button>
+              <button onClick={() => { setResetTarget(lid); setNieuwWachtwoord(''); setResetMsg('') }} className="text-xs py-2 px-3 rounded-lg bg-purple-50 text-purple-700 font-medium">Wachtwoord</button>
+              <button onClick={() => setDeactiveerTarget(lid)}
+                className={`text-xs py-2 px-3 rounded-lg font-medium ${lid.actief ? 'bg-orange-50 text-orange-700' : 'bg-green-50 text-green-700'}`}>
+                {lid.actief ? 'Deactiveer' : 'Activeer'}
+              </button>
+              <button onClick={() => setVerwijderTarget(lid)} className="text-xs py-2 px-3 rounded-lg bg-red-50 text-red-700 font-medium">Verwijder</button>
+            </div>
+          </div>
+        ))}
+        {displayTeam.length === 0 && (
+          <div className="text-center py-12 text-gray-400">Geen teamleden gevonden</div>
+        )}
+      </div>
+
+      {/* Desktop tabel */}
+
+      <div className="card !p-0 overflow-hidden hidden lg:block">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

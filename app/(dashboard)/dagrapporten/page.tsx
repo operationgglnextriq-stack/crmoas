@@ -113,7 +113,54 @@ export default function DagraportenPage() {
         </div>
       </div>
 
-      <div className="card !p-0 overflow-hidden">
+      {/* Mobile card view */}
+      <div className="lg:hidden space-y-3">
+        {zichtbaar.map(r => (
+          <div key={r.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+            <div className="flex items-start justify-between gap-2 mb-3">
+              <div>
+                <p className="font-semibold text-[#1B2A4A] text-sm">{r.naam}</p>
+                <p className="text-xs text-gray-400">{format(new Date(r.rapport_datum), 'd MMM yyyy', { locale: nl })}</p>
+              </div>
+              {r.op_tijd
+                ? <span className="badge bg-green-100 text-green-700 text-xs">\u2713 Op tijd</span>
+                : <span className="badge bg-red-100 text-red-700 text-xs">\u2717 Te laat</span>
+              }
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center mb-3">
+              <div className="bg-gray-50 rounded-lg p-2">
+                <p className="text-lg font-bold text-[#1B2A4A]">{r.leads_benaderd}</p>
+                <p className="text-[10px] text-gray-500">Leads</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-2">
+                <p className="text-lg font-bold text-[#1B2A4A]">{r.cold_calls}</p>
+                <p className="text-[10px] text-gray-500">Calls</p>
+              </div>
+              <div className="bg-green-50 rounded-lg p-2">
+                <p className="text-lg font-bold text-green-700">{r.calls_geboekt}</p>
+                <p className="text-[10px] text-gray-500">Geboekt</p>
+              </div>
+            </div>
+            {isManager && (
+              <div className="border-t border-gray-100 pt-3">
+                <button
+                  onClick={() => setDeleteTarget(r)}
+                  className="text-xs py-2 px-4 rounded-lg bg-red-50 text-red-700 font-medium"
+                >
+                  Verwijderen
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+        {zichtbaar.length === 0 && (
+          <div className="text-center py-12 text-gray-400">Nog geen dagrapporten</div>
+        )}
+      </div>
+
+      {/* Desktop tabel */}
+
+      <div className="card !p-0 overflow-hidden hidden lg:block">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

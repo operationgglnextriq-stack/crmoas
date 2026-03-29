@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { Rol } from '@/types'
 
@@ -15,19 +15,18 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: '/dashboard', icon: '🏠', label: 'Dashboard', roles: ['founder', 'sales_manager', 'setter', 'outreacher', 'closer', 'creator', 'ambassadeur', 'web_developer', 'head_of_tech', 'ai_engineer'] },
+  { href: '/vandaag', icon: '📅', label: 'Vandaag', roles: ['founder', 'sales_manager', 'setter', 'outreacher', 'closer', 'creator', 'ambassadeur', 'web_developer', 'head_of_tech', 'ai_engineer'] },
   { href: '/leads', icon: '👥', label: 'Leads', roles: ['founder', 'sales_manager', 'setter'] },
   { href: '/outreach', icon: '📞', label: 'Outreach', roles: ['founder', 'sales_manager', 'outreacher'] },
   { href: '/pipeline', icon: '💼', label: 'Pipeline', roles: ['founder', 'sales_manager', 'closer', 'setter', 'creator', 'ambassadeur', 'web_developer', 'head_of_tech', 'ai_engineer'] },
   { href: '/deals', icon: '📁', label: 'Deals', roles: ['founder', 'sales_manager', 'closer', 'web_developer', 'head_of_tech'] },
-  { href: '/dagrapporten', icon: '📋', label: 'Rapporten', roles: ['founder', 'sales_manager', 'setter', 'outreacher', 'closer'] },
   { href: '/marktdata', icon: '📊', label: 'Marktdata', roles: ['founder', 'sales_manager', 'setter', 'outreacher'] },
+  { href: '/dagrapporten', icon: '📋', label: 'Dagrapporten', roles: ['founder', 'sales_manager', 'setter', 'outreacher', 'closer'] },
   { href: '/leaderboard', icon: '🏆', label: 'Leaderboard', roles: ['founder', 'sales_manager'] },
   { href: '/commissies', icon: '💰', label: 'Commissies', roles: ['founder', 'sales_manager'] },
-  { href: '/team', icon: '⚙️', label: 'Team', roles: ['founder', 'sales_manager'] },
-  { href: '/todo', icon: '✅', label: 'Todo', roles: ['founder', 'sales_manager', 'web_developer', 'head_of_tech'] },
+  { href: '/team', icon: '⚙️', label: 'Team beheer', roles: ['founder', 'sales_manager'] },
+  { href: '/todo', icon: '✅', label: 'Todo List', roles: ['founder', 'sales_manager', 'web_developer', 'head_of_tech'] },
 ]
-
-const BOTTOM_PRIORITY = ['/dashboard', '/leads', '/outreach', '/pipeline', '/deals', '/dagrapporten']
 
 const rolLabels: Record<Rol, string> = {
   founder: 'Founder',
@@ -42,129 +41,116 @@ const rolLabels: Record<Rol, string> = {
   ai_engineer: 'AI Engineer',
 }
 
-export default function MobileNav() {
+interface MobileNavProps {
+  open: boolean
+  onClose: () => void
+}
+
+export default function MobileNav({ open, onClose }: MobileNavProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { teamMember, signOut } = useAuth()
-  const [meerOpen, setMeerOpen] = useState(false)
 
   const userRol = teamMember?.rol as Rol | undefined
   const filteredNav = navItems.filter(item => userRol ? item.roles.includes(userRol) : false)
 
-  // Pick up to 4 primary items based on priority order
-  const primaryItems = BOTTOM_PRIORITY
-    .map(href => filteredNav.find(item => item.href === href))
-    .filter(Boolean)
-    .slice(0, 4) as NavItem[]
+  // Close drawer on route change
+  useEffect(() => {
+    onClose()
+  }, [pathname]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const meerItems = filteredNav.filter(item => !primaryItems.find(p => p.href === item.href))
+  // Lock body scroll when open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [open])
 
   const handleSignOut = async () => {
-    setMeerOpen(false)
+    onClose()
     await signOut()
     router.push('/login')
   }
 
   return (
     <>
-      {/* Bottom navigation bar — only mobile */}
-      <nav className="fixed bottom-0 left-0 right-0 h-16 bg-[#1B2A4A] flex items-stretch z-50 md:hidden border-t border-white/10 safe-area-pb">
-        {primaryItems.map(item => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`relative flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors ${
-                isActive ? 'text-white' : 'text-white/55'
-              }`}
-            >
-              {isActive && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-[#6B3FA0] rounded-b" />
-              )}
-              <span className="text-xl leading-none">{item.icon}</span>
-              <span className="text-[10px] font-medium leading-tight">{item.label}</span>
-            </Link>
-          )
-        })}
-
-        {/* Meer button */}
-        <button
-          onClick={() => setMeerOpen(true)}
-          className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors ${
-            meerOpen ? 'text-white' : 'text-white/55'
-          }`}
-        >
-          <span className="text-xl leading-none">☰</span>
-          <span className="text-[10px] font-medium">Meer</span>
-        </button>
-      </nav>
-
       {/* Backdrop */}
-      {meerOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 z-40 md:hidden"
-          onClick={() => setMeerOpen(false)}
-        />
-      )}
-
-      {/* Slide-up sheet */}
       <div
-        className={`fixed left-0 right-0 bottom-16 bg-white rounded-t-2xl z-50 md:hidden shadow-2xl transition-transform duration-300 ${
-          meerOpen ? 'translate-y-0' : 'translate-y-full'
+        className={`fixed inset-0 bg-black/50 z-[60] lg:hidden transition-opacity duration-300 ${
+          open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={onClose}
+      />
+
+      {/* Slide-in drawer from right */}
+      <div
+        className={`fixed top-0 right-0 h-full w-72 max-w-[85vw] bg-[#1B2A4A] z-[70] lg:hidden flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${
+          open ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        {/* Handle */}
-        <div className="flex justify-center pt-3 pb-2">
-          <div className="w-10 h-1 bg-gray-300 rounded-full" />
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <span className="text-xl font-bold text-white tracking-wide">NEXTRIQ</span>
+          <button
+            onClick={onClose}
+            className="w-9 h-9 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+            aria-label="Menu sluiten"
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="2" y1="2" x2="16" y2="16" />
+              <line x1="16" y1="2" x2="2" y2="16" />
+            </svg>
+          </button>
         </div>
 
-        <div className="px-4 pb-6">
-          {/* User info */}
+        {/* Nav links */}
+        <nav className="flex-1 overflow-y-auto py-3">
+          {filteredNav.map(item => {
+            const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-3 px-5 py-3.5 text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-[#6B3FA0] text-white'
+                    : 'text-white/75 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                {isActive && (
+                  <span className="absolute left-0 w-1 h-8 bg-[#9B6FD0] rounded-r" />
+                )}
+                <span className="text-lg leading-none flex-shrink-0">{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            )
+          })}
+        </nav>
+
+        {/* User info + logout */}
+        <div className="border-t border-white/10 p-4 space-y-3">
           {teamMember && (
-            <div className="flex items-center gap-3 py-3 mb-3 border-b border-gray-100">
+            <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-[#6B3FA0] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                 {teamMember.naam.charAt(0).toUpperCase()}
               </div>
-              <div>
-                <p className="font-semibold text-[#1B2A4A] text-sm">{teamMember.naam}</p>
-                <span className="text-xs bg-[#6B3FA0] text-white px-2 py-0.5 rounded-full">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white truncate">{teamMember.naam}</p>
+                <span className="inline-block text-xs bg-white/15 text-white/90 px-2 py-0.5 rounded-full mt-0.5">
                   {rolLabels[teamMember.rol as Rol]}
                 </span>
               </div>
             </div>
           )}
-
-          {/* Extra nav items */}
-          {meerItems.length > 0 && (
-            <div className="grid grid-cols-3 gap-2 mb-4">
-              {meerItems.map(item => {
-                const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMeerOpen(false)}
-                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl transition-colors ${
-                      isActive
-                        ? 'bg-[#6B3FA0]/10 text-[#6B3FA0]'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <span className="text-2xl leading-none">{item.icon}</span>
-                    <span className="text-xs font-medium text-center leading-tight">{item.label}</span>
-                  </Link>
-                )
-              })}
-            </div>
-          )}
-
-          {/* Logout */}
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center justify-center gap-2 py-3 text-red-600 border border-red-200 rounded-xl hover:bg-red-50 transition-colors text-sm font-medium"
+            className="w-full flex items-center justify-center gap-2 py-2.5 text-sm text-white/70 hover:text-white border border-white/20 hover:border-white/40 rounded-xl transition-colors"
           >
-            <span>🚪</span> Uitloggen
+            <span>🚪</span>
+            <span>Uitloggen</span>
           </button>
         </div>
       </div>

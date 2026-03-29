@@ -123,8 +123,52 @@ export default function DealsPage() {
         </div>
       </div>
 
-      {/* Tabel */}
-      <div className="card !p-0 overflow-hidden">
+      {/* Mobile card view */}
+      <div className="lg:hidden space-y-3">
+        {gefilterd.map(deal => (
+          <div key={deal.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <div className="flex-1 min-w-0">
+                <span className="font-semibold text-[#1B2A4A] text-sm leading-tight block truncate">
+                  {deal.bedrijfsnaam}
+                </span>
+                {deal.product && (
+                  <p className="text-xs text-gray-500 mt-0.5">{PRODUCT_LABELS[deal.product] ?? deal.product}</p>
+                )}
+              </div>
+              <span className={`badge text-xs flex-shrink-0 ${STATUS_COLORS[deal.deal_status]}`}>
+                {STATUS_LABELS[deal.deal_status]}
+              </span>
+            </div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-lg font-bold text-[#6B3FA0]">€{(deal.deal_waarde ?? 0).toLocaleString('nl-NL')}</span>
+              <span className="text-xs text-gray-400">{new Date(deal.created_at).toLocaleDateString('nl-NL')}</span>
+            </div>
+            <div className="flex gap-3 text-xs text-gray-500 mb-3">
+              {deal.setter_naam && <span>🎯 {deal.setter_naam}</span>}
+              {deal.closer_naam && <span>💼 {deal.closer_naam}</span>}
+            </div>
+            {isManager && (
+              <div className="border-t border-gray-100 pt-3">
+                <button
+                  onClick={() => handleDelete(deal.id)}
+                  disabled={deletingId === deal.id}
+                  className="text-xs py-2 px-4 rounded-lg bg-red-50 text-red-700 font-medium disabled:opacity-50"
+                >
+                  {deletingId === deal.id ? 'Verwijderen...' : 'Verwijderen'}
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+        {gefilterd.length === 0 && (
+          <div className="text-center py-12 text-gray-400">Geen deals gevonden</div>
+        )}
+      </div>
+
+      {/* Desktop tabel */}
+
+      <div className="card !p-0 overflow-hidden hidden lg:block">
         <div className="px-4 py-3 bg-gray-50 border-b">
           <h3 className="font-semibold text-gray-700">Deals ({gefilterd.length})</h3>
         </div>

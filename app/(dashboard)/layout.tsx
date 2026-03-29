@@ -10,6 +10,7 @@ import { useAuth } from '@/context/AuthContext'
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false)
   const [hasBanner, setHasBanner] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { user, loading } = useAuth()
   const router = useRouter()
 
@@ -42,15 +43,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Desktop sidebar — hidden on mobile */}
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
-      <Topbar sidebarCollapsed={collapsed} onBannerChange={setHasBanner} />
-      <MobileNav />
+
+      {/* Topbar — hamburger on mobile, collapse toggle on desktop */}
+      <Topbar
+        sidebarCollapsed={collapsed}
+        onBannerChange={setHasBanner}
+        onMobileMenuOpen={() => setMobileMenuOpen(true)}
+      />
+
+      {/* Mobile slide-in drawer — hidden on desktop */}
+      <MobileNav
+        open={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+      />
+
       <main
-        className={`transition-all duration-300 pb-20 md:pb-0 min-h-screen ${
-          collapsed ? 'md:ml-16' : 'md:ml-60'
-        } ${hasBanner ? 'pt-20 md:pt-24' : 'pt-12 md:pt-16'}`}
+        className={`transition-all duration-300 min-h-screen ${
+          collapsed ? 'lg:ml-16' : 'lg:ml-60'
+        } ${hasBanner ? 'pt-[4.5rem] lg:pt-24' : 'pt-12 lg:pt-16'}`}
       >
-        <div className="p-4 md:p-6">
+        <div className="p-4 lg:p-6">
           {children}
         </div>
       </main>

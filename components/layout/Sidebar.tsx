@@ -58,7 +58,7 @@ export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; o
 
   return (
     <aside
-      className={`fixed top-0 left-0 h-full bg-[#1B2A4A] text-white hidden md:flex flex-col z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 h-full bg-[#1B2A4A] text-white hidden lg:flex flex-col z-50 transition-all duration-300 ${
         collapsed ? 'w-16' : 'w-60'
       }`}
     >
