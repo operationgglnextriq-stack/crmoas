@@ -453,7 +453,7 @@ export default function LeadDetailPage({ params }: { params: { id: string } }) {
               </select></div>
             <div><label className="label">Kwalificatiestatus</label>
               <select className="input" value={form.kwalificatiestatus ?? ''} onChange={e => setForm(f => ({ ...f, kwalificatiestatus: e.target.value as KwalificatieStatus }))}>
-                {['warm','followup_1','followup_2','followup_3','geboekt','niet','afwijzing'].map(s => <option key={s} value={s}>{s}</option>)}
+                {['benaderd','warm','benaderd','followup_1','followup_2','followup_3','geboekt','niet','afwijzing'].map(s => <option key={s} value={s}>{s}</option>)}
               </select></div>
           </div>
           <div className="border-t pt-4">

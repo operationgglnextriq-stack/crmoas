@@ -139,7 +139,7 @@ export default function LeadsPage() {
           </select>
           <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="input">
             <option value="">Alle statussen</option>
-            {['warm','followup_1','followup_2','followup_3','geboekt','niet','afwijzing'].map(s => (
+            {['benaderd','warm','benaderd','followup_1','followup_2','followup_3','geboekt','niet','afwijzing'].map(s => (
               <option key={s} value={s}>{s.replace('_',' ')}</option>
             ))}
           </select>

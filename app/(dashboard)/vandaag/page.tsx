@@ -39,6 +39,7 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 const STATUS_LABELS: Record<string, string> = {
+  benaderd: 'Benaderd',
   followup_1: 'Follow-up 1',
   followup_2: 'Follow-up 2',
   followup_3: 'Follow-up 3',
@@ -113,7 +114,7 @@ export default function PlanningPage() {
   const pipelineLeads = isManager ? leads : leads.filter(l =>
     l.setter_naam === teamMember?.naam || l.closer_naam === teamMember?.naam
   )
-  const pipelineStatussen = ['followup_1', 'followup_2', 'followup_3', 'warm', 'geboekt', 'niet', 'afwijzing']
+  const pipelineStatussen = ['benaderd', 'followup_1', 'followup_2', 'followup_3', 'warm', 'geboekt', 'niet', 'afwijzing']
 
   const getBedrijfsnaam = (a: Actie) => a.leads?.bedrijfsnaam ?? leads.find(l => l.id === a.lead_id)?.bedrijfsnaam ?? '—'
 

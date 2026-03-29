@@ -244,7 +244,7 @@ export default function NieuweLeadPage() {
             <div>
               <label className="label">Kwalificatiestatus</label>
               <select className="input" value={form.kwalificatiestatus} onChange={e => set('kwalificatiestatus', e.target.value)}>
-                {['warm','followup_1','followup_2','followup_3','geboekt','niet','afwijzing'].map(s => <option key={s} value={s}>{s.replace('_',' ')}</option>)}
+                {['benaderd','warm','benaderd','followup_1','followup_2','followup_3','geboekt','niet','afwijzing'].map(s => <option key={s} value={s}>{s.replace('_',' ')}</option>)}
               </select>
             </div>
           </>

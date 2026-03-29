@@ -17,7 +17,7 @@ export interface TeamMember {
 
 export type Sector = 'ecommerce' | 'horeca' | 'zakelijk' | 'zorg' | 'bouw' | 'retail' | 'tech' | 'schoonmaak' | 'finance' | 'overig'
 export type Kanaal = 'instagram_dm' | 'tiktok' | 'linkedin' | 'biolink' | 'outbound' | 'referral' | 'checkout' | 'whatsapp' | 'web_form'
-export type KwalificatieStatus = 'warm' | 'followup_1' | 'followup_2' | 'followup_3' | 'geboekt' | 'niet' | 'afwijzing'
+export type KwalificatieStatus = 'benaderd' | 'warm' | 'followup_1' | 'followup_2' | 'followup_3' | 'geboekt' | 'niet' | 'afwijzing'
 export type ProductInteresse = 'website' | 'ai_scan' | 'ai_agency' | 'ink' | 'community' | 'onbekend'
 export type BantBudget = 'ja' | 'onduidelijk' | 'nee'
 export type BantAutoriteit = 'beslisser' | 'indirect' | 'geen'
