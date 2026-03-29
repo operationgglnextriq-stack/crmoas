@@ -513,10 +513,12 @@ function DagrapportOverzicht({
   vandaagRapporten,
   actieveVerkoopLeden,
   nietIngediend,
+  openActies,
 }: {
   vandaagRapporten: Dagrapport[]
   actieveVerkoopLeden: TeamMember[]
   nietIngediend: TeamMember[]
+  openActies: LeadActieWithLead[]
 }) {
   const totaal = actieveVerkoopLeden.length
   const ingediend = vandaagRapporten.length
@@ -544,10 +546,11 @@ function DagrapportOverzicht({
                     <span className="text-sm font-semibold text-[#1B2A4A]">{r.naam}</span>
                     <span className="text-xs text-gray-500">{r.afdeling}</span>
                   </div>
-                  <div className="flex gap-3 mt-1 text-xs text-gray-600">
+                  <div className="flex flex-wrap gap-3 mt-1 text-xs text-gray-600">
                     <span>👥 {r.leads_benaderd} leads</span>
                     <span>📞 {r.cold_calls} calls</span>
                     <span className="text-green-700 font-medium">✅ {r.calls_geboekt} geboekt</span>
+                    {(() => { const n = openActies.filter(a => a.toegewezen_aan === r.naam).length; return n > 0 ? <span className="text-blue-700 font-medium">📋 {n} follow-up{n > 1 ? 's' : ''} open</span> : null })()}
                   </div>
                 </div>
               ))}
