@@ -119,6 +119,8 @@ export default function DashboardPage() {
   }
 
   // ── Acties helpers ────────────────────────────────────────────────────────
+  const nowDate = new Date()
+  const todayStart = startOfDay(nowDate)
   const openActies = acties.filter(a => a.status === 'open')
   const todayDateStr = format(nowDate, 'yyyy-MM-dd')
   const gedaanVandaag = acties.filter(a => a.status === 'gedaan' && a.afgerond_op && a.afgerond_op.startsWith(todayDateStr))
@@ -126,8 +128,6 @@ export default function DashboardPage() {
     ? openActies
     : openActies.filter(a => a.toegewezen_aan === teamMember?.naam)
 
-  const nowDate = new Date()
-  const todayStart = startOfDay(nowDate)
   const todayEnd = endOfDay(nowDate)
   const weekEnd2 = endOfWeek(nowDate, { weekStartsOn: 1 })
 
