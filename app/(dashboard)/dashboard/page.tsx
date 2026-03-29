@@ -120,6 +120,8 @@ export default function DashboardPage() {
 
   // ── Acties helpers ────────────────────────────────────────────────────────
   const openActies = acties.filter(a => a.status === 'open')
+  const todayDateStr = format(nowDate, 'yyyy-MM-dd')
+  const gedaanVandaag = acties.filter(a => a.status === 'gedaan' && a.afgerond_op && a.afgerond_op.startsWith(todayDateStr))
   const myOpenActies = isManager
     ? openActies
     : openActies.filter(a => a.toegewezen_aan === teamMember?.naam)
@@ -515,11 +517,13 @@ function DagrapportOverzicht({
   actieveVerkoopLeden,
   nietIngediend,
   openActies,
+  gedaanVandaag,
 }: {
   vandaagRapporten: Dagrapport[]
   actieveVerkoopLeden: TeamMember[]
   nietIngediend: TeamMember[]
   openActies: LeadActieWithLead[]
+  gedaanVandaag: LeadActieWithLead[]
 }) {
   const totaal = actieveVerkoopLeden.length
   const ingediend = vandaagRapporten.length
@@ -551,7 +555,17 @@ function DagrapportOverzicht({
                     <span>👥 {r.leads_benaderd} leads</span>
                     <span>📞 {r.cold_calls} calls</span>
                     <span className="text-green-700 font-medium">✅ {r.calls_geboekt} geboekt</span>
-                    {(() => { const n = openActies.filter(a => a.toegewezen_aan === r.naam).length; return n > 0 ? <span className="text-blue-700 font-medium">📋 {n} follow-up{n > 1 ? 's' : ''} open</span> : null })()}
+                    {(() => {
+                      const open = openActies.filter(a => a.toegewezen_aan === r.naam).length
+                      return (
+                        <>
+                          {gedaanVandaag.filter((a: {toegewezen_aan: string}) => a.toegewezen_aan === r.naam).length > 0 && (
+                            <span className="text-green-600 font-medium">✅ {gedaanVandaag.filter((a: {toegewezen_aan: string}) => a.toegewezen_aan === r.naam).length} gedaan</span>
+                          )}
+                          {open > 0 && <span className="text-blue-700 font-medium">📋 {open} open</span>}
+                        </>
+                      )
+                    })()}
                   </div>
                 </div>
               ))}
