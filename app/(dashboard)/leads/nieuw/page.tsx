@@ -1,4 +1,5 @@
 'use client'
+export const dynamic = "force-dynamic";
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
@@ -79,7 +80,7 @@ export default function NieuweLeadPage() {
   }
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-2xl mx-auto">
       {/* Progress */}
       <div className="flex items-center gap-2 mb-6">
         {[1, 2, 3].map(s => (
@@ -149,7 +150,7 @@ export default function NieuweLeadPage() {
               <label className="label">Website</label>
               <input className="input" value={form.website} onChange={e => set('website', e.target.value)} placeholder="https://" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
               <div>
                 <label className="label">Contactpersoon *</label>
                 <input className="input" value={form.contactpersoon} onChange={e => set('contactpersoon', e.target.value)} required />
@@ -163,7 +164,7 @@ export default function NieuweLeadPage() {
               <label className="label">E-mailadres</label>
               <input type="email" className="input" value={form.emailadres} onChange={e => set('emailadres', e.target.value)} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
               <div>
                 <label className="label">Sector</label>
                 <select className="input" value={form.sector} onChange={e => set('sector', e.target.value)}>
@@ -179,7 +180,7 @@ export default function NieuweLeadPage() {
                 </select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
               <div>
                 <label className="label">Setter naam *</label>
                 <input className="input" value={form.setter_naam} onChange={e => set('setter_naam', e.target.value)} />

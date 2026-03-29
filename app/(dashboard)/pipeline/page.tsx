@@ -1,4 +1,5 @@
 'use client'
+export const dynamic = "force-dynamic";
 
 import { useEffect, useState, useCallback } from 'react'
 import { useAuth } from '@/context/AuthContext'
@@ -406,7 +407,7 @@ function DroppableColumn({ stage, deals, onEdit, onDelete, onView, canEditDeal, 
   const { setNodeRef, isOver } = useDroppable({ id: stage.key })
   const total = deals.reduce((s, d) => s + (d.deal_waarde ?? 0), 0)
   return (
-    <div ref={setNodeRef} className={`flex-shrink-0 w-64 rounded-xl border-2 ${stage.color} ${stage.bg} transition-all ${isOver ? 'ring-2 ring-offset-1 ring-[#6B3FA0]' : ''}`}>
+    <div ref={setNodeRef} className={`flex-shrink-0 w-[280px] md:w-64 rounded-xl border-2 ${stage.color} ${stage.bg} transition-all ${isOver ? 'ring-2 ring-offset-1 ring-[#6B3FA0]' : ''}`}>
       <div className="p-3 border-b border-black/10">
         <p className="font-semibold text-sm text-gray-700">{stage.label}</p>
         <p className="text-xs text-gray-500">{deals.length} deals · €{total.toLocaleString('nl-NL')}</p>

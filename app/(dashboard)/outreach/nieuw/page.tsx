@@ -1,4 +1,5 @@
 'use client'
+export const dynamic = "force-dynamic";
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
@@ -63,7 +64,7 @@ export default function NieuwOutreachPage() {
   }
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-2xl mx-auto">
       <form onSubmit={handleSubmit} className="card space-y-4">
         <h2 className="text-lg font-semibold text-[#1B2A4A]">Nieuw outreach contact</h2>
         {duplicaatData && (
@@ -95,7 +96,7 @@ export default function NieuwOutreachPage() {
           <label className="label">Website</label>
           <input className="input" value={form.website} onChange={e => set('website', e.target.value)} placeholder="https://" />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
           <div>
             <label className="label">Contactpersoon *</label>
             <input className="input" value={form.contactpersoon} onChange={e => set('contactpersoon', e.target.value)} required />
@@ -109,7 +110,7 @@ export default function NieuwOutreachPage() {
           <label className="label">E-mailadres</label>
           <input type="email" className="input" value={form.emailadres} onChange={e => set('emailadres', e.target.value)} />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
           <div>
             <label className="label">Sector</label>
             <select className="input" value={form.sector} onChange={e => set('sector', e.target.value)}>
@@ -122,7 +123,7 @@ export default function NieuwOutreachPage() {
             <input className="input" value={form.outreacher_naam} onChange={e => set('outreacher_naam', e.target.value)} required />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
           <div>
             <label className="label">Methode</label>
             <select className="input" value={form.methode} onChange={e => set('methode', e.target.value)}>

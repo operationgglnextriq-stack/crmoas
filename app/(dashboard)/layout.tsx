@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Sidebar from '@/components/layout/Sidebar'
 import Topbar from '@/components/layout/Topbar'
+import MobileNav from '@/components/layout/MobileNav'
 import { useAuth } from '@/context/AuthContext'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -42,12 +43,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen bg-gray-50">
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
       <Topbar sidebarCollapsed={collapsed} />
+      <MobileNav />
       <main
-        className={`transition-all duration-300 pt-16 min-h-screen ${
-          collapsed ? 'ml-16' : 'ml-60'
+        className={`transition-all duration-300 pt-12 md:pt-16 pb-20 md:pb-0 min-h-screen ${
+          collapsed ? 'md:ml-16' : 'md:ml-60'
         }`}
       >
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           {children}
         </div>
       </main>
