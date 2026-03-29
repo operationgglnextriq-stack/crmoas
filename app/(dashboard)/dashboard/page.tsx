@@ -461,7 +461,7 @@ function ActiesWidget({
     <div className="bg-white rounded-xl shadow-sm p-6">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <h3 className="text-[#1B2A4A] font-semibold">🗓️ Openstaande acties</h3>
-        <a href="/dashboard/vandaag" className="text-sm text-blue-600 hover:underline">Bekijk alle →</a>
+        <a href="/vandaag" className="text-sm text-blue-600 hover:underline">Bekijk alle →</a>
       </div>
 
       {/* Counts row */}

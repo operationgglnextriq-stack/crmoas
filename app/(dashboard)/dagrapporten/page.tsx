@@ -16,6 +16,7 @@ export default function DagraportenPage() {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Dagrapport | null>(null)
+  const [selectedReport, setSelectedReport] = useState<Dagrapport | null>(null)
   const [saving, setSaving] = useState(false)
   const [copied, setCopied] = useState(false)
   const [form, setForm] = useState({
@@ -141,16 +142,22 @@ export default function DagraportenPage() {
                 <p className="text-[10px] text-gray-500">Geboekt</p>
               </div>
             </div>
-            {isManager && (
-              <div className="border-t border-gray-100 pt-3">
+            <div className="border-t border-gray-100 pt-3 flex gap-2">
+              <button
+                onClick={() => setSelectedReport(r)}
+                className="flex-1 text-xs py-2 px-4 rounded-lg bg-blue-50 text-blue-700 font-medium"
+              >
+                Bekijk
+              </button>
+              {isManager && (
                 <button
                   onClick={() => setDeleteTarget(r)}
                   className="text-xs py-2 px-4 rounded-lg bg-red-50 text-red-700 font-medium"
                 >
                   Verwijderen
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         ))}
         {zichtbaar.length === 0 && (
@@ -250,6 +257,35 @@ export default function DagraportenPage() {
         </div>
       </Modal>
 
+
+      {/* Detail modal voor mobiel */}
+      {selectedReport && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 lg:hidden" onClick={() => setSelectedReport(null)}>
+          <div className="bg-white rounded-t-2xl w-full p-6 max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-[#1B2A4A] text-lg">{selectedReport.naam}</h3>
+              <button onClick={() => setSelectedReport(null)} className="text-gray-400 text-xl">✕</button>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">{selectedReport.rapport_datum} · {selectedReport.afdeling}</p>
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="bg-gray-50 rounded-xl p-3 text-center">
+                <p className="text-2xl font-bold text-[#1B2A4A]">{selectedReport.leads_benaderd}</p>
+                <p className="text-xs text-gray-500">Leads</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-3 text-center">
+                <p className="text-2xl font-bold text-[#1B2A4A]">{selectedReport.cold_calls}</p>
+                <p className="text-xs text-gray-500">Cold calls</p>
+              </div>
+              <div className="bg-green-50 rounded-xl p-3 text-center">
+                <p className="text-2xl font-bold text-green-700">{selectedReport.calls_geboekt}</p>
+                <p className="text-xs text-gray-500">Geboekt</p>
+              </div>
+            </div>
+            {selectedReport.pijnpunten && <div className="mb-3"><p className="text-xs text-gray-500 mb-1">Pijnpunten</p><p className="text-sm">{selectedReport.pijnpunten}</p></div>}
+            {selectedReport.blokkades && <div className="mb-3"><p className="text-xs text-gray-500 mb-1">Blokkades</p><p className="text-sm">{selectedReport.blokkades}</p></div>}
+          </div>
+        </div>
+      )}
       <ConfirmModal
         open={!!deleteTarget} onClose={() => setDeleteTarget(null)}
         onConfirm={() => deleteTarget && handleDelete(deleteTarget.id)}
