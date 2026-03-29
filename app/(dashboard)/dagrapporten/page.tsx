@@ -279,7 +279,7 @@ export default function DagraportenPage() {
               <button onClick={() => setSelectedReport(null)} className="text-gray-400 text-xl">✕</button>
             </div>
             <p className="text-sm text-gray-500 mb-4">{selectedReport.rapport_datum} · {selectedReport.afdeling}</p>
-            <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="bg-gray-50 rounded-xl p-3 text-center">
                 <p className="text-2xl font-bold text-[#1B2A4A]">{selectedReport.leads_benaderd}</p>
                 <p className="text-xs text-gray-500">Leads</p>
@@ -291,6 +291,10 @@ export default function DagraportenPage() {
               <div className="bg-green-50 rounded-xl p-3 text-center">
                 <p className="text-2xl font-bold text-green-700">{selectedReport.calls_geboekt}</p>
                 <p className="text-xs text-gray-500">Geboekt</p>
+              </div>
+              <div className="bg-purple-50 rounded-xl p-3 text-center">
+                <p className="text-2xl font-bold text-purple-700">{selectedReport.volle_ups ?? 0}</p>
+                <p className="text-xs text-gray-500">Follow-ups</p>
               </div>
             </div>
             {selectedReport.pijnpunten && <div className="mb-3"><p className="text-xs text-gray-500 mb-1">Pijnpunten</p><p className="text-sm">{selectedReport.pijnpunten}</p></div>}

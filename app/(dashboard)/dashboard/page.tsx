@@ -555,6 +555,7 @@ function DagrapportOverzicht({
                     <span>👥 {r.leads_benaderd} leads</span>
                     <span>📞 {r.cold_calls} calls</span>
                     <span className="text-green-700 font-medium">✅ {r.calls_geboekt} geboekt</span>
+                    {(r.volle_ups ?? 0) > 0 && <span className="text-purple-700 font-medium">🔄 {r.volle_ups} follow-ups</span>}
                     {(() => {
                       const open = openActies.filter(a => a.toegewezen_aan === r.naam).length
                       return (
