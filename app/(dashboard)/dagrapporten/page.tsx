@@ -17,6 +17,18 @@ export default function DagraportenPage() {
   const [showModal, setShowModal] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Dagrapport | null>(null)
   const [selectedReport, setSelectedReport] = useState<Dagrapport | null>(null)
+  const [selectedActies, setSelectedActies] = useState<{type: string, gepland_op: string, toegewezen_aan: string}[]>([])
+
+  const openReport = async (r: Dagrapport) => {
+    setSelectedReport(r)
+    try {
+      const res = await fetch(`/api/lead-acties?medewerker=${encodeURIComponent(r.naam)}`)
+      if (res.ok) {
+        const data = await res.json()
+        setSelectedActies(Array.isArray(data) ? data.filter((a: {status: string}) => a.status === 'open') : [])
+      }
+    } catch { setSelectedActies([]) }
+  }
   const [saving, setSaving] = useState(false)
   const [copied, setCopied] = useState(false)
   const [form, setForm] = useState({
@@ -124,8 +136,8 @@ export default function DagraportenPage() {
                 <p className="text-xs text-gray-400">{format(new Date(r.rapport_datum), 'd MMM yyyy', { locale: nl })}</p>
               </div>
               {r.op_tijd
-                ? <span className="badge bg-green-100 text-green-700 text-xs">\u2713 Op tijd</span>
-                : <span className="badge bg-red-100 text-red-700 text-xs">\u2717 Te laat</span>
+                ? <span className="badge bg-green-100 text-green-700 text-xs">✓ Op tijd</span>
+                : <span className="badge bg-red-100 text-red-700 text-xs">✗ Te laat</span>
               }
             </div>
             <div className="grid grid-cols-3 gap-2 text-center mb-3">
@@ -144,7 +156,7 @@ export default function DagraportenPage() {
             </div>
             <div className="border-t border-gray-100 pt-3 flex gap-2">
               <button
-                onClick={() => setSelectedReport(r)}
+                onClick={() => openReport(r)}
                 className="flex-1 text-xs py-2 px-4 rounded-lg bg-blue-50 text-blue-700 font-medium"
               >
                 Bekijk
@@ -283,6 +295,21 @@ export default function DagraportenPage() {
             </div>
             {selectedReport.pijnpunten && <div className="mb-3"><p className="text-xs text-gray-500 mb-1">Pijnpunten</p><p className="text-sm">{selectedReport.pijnpunten}</p></div>}
             {selectedReport.blokkades && <div className="mb-3"><p className="text-xs text-gray-500 mb-1">Blokkades</p><p className="text-sm">{selectedReport.blokkades}</p></div>}
+            {selectedActies.length > 0 && (
+              <div className="mt-4 border-t pt-3">
+                <p className="text-xs text-gray-500 mb-2 font-semibold uppercase">📋 Open follow-ups ({selectedActies.length})</p>
+                <div className="space-y-2">
+                  {selectedActies.slice(0, 5).map((a, i) => (
+                    <div key={i} className="bg-blue-50 rounded-lg p-2 flex justify-between items-center">
+                      <span className="text-xs font-medium text-blue-800">{a.type.replace(/_/g, ' ')}</span>
+                      <span className="text-xs text-gray-500">{new Date(a.gepland_op).toLocaleDateString('nl-NL')}</span>
+                    </div>
+                  ))}
+                  {selectedActies.length > 5 && <p className="text-xs text-gray-400 text-center">+{selectedActies.length - 5} meer</p>}
+                </div>
+              </div>
+            )}
+            {selectedActies.length === 0 && <div className="mt-4 border-t pt-3"><p className="text-xs text-gray-400">Geen open follow-ups</p></div>}
           </div>
         </div>
       )}

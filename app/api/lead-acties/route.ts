@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
   const lead_id = searchParams.get('lead_id')
   const vandaag = searchParams.get('vandaag') === 'true'
   const openstaand = searchParams.get('openstaand') === 'true'
+  const medewerker = searchParams.get('medewerker')
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let q = (admin.from('lead_acties') as any).select('*, leads(bedrijfsnaam)').order('gepland_op', { ascending: true })
@@ -56,6 +57,10 @@ export async function GET(request: NextRequest) {
     const start = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString()
     const end = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString()
     q = q.gte('gepland_op', start).lt('gepland_op', end).eq('status', 'open')
+  }
+
+  if (medewerker) {
+    q = q.eq('toegewezen_aan', medewerker)
   }
 
   if (openstaand) {
