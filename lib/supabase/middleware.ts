@@ -25,19 +25,25 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const isAuthPage = request.nextUrl.pathname.startsWith('/login')
-  const isApiRoute = request.nextUrl.pathname.startsWith('/api/')
-  const isProtected = !isAuthPage && !isApiRoute && request.nextUrl.pathname !== '/'
+  const isAuthPage = request.nextUrl.pathname.startsWith("/login")
+  const isApiRoute = request.nextUrl.pathname.startsWith("/api/")
+  const isProtected = !isAuthPage && request.nextUrl.pathname !== "/"
 
-  if (isProtected && !user) {
+  // Paginas: redirect naar login
+  if (!isApiRoute && isProtected && !user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/login'
+    url.pathname = "/login"
     return NextResponse.redirect(url)
+  }
+
+  // API routes: 401 als niet ingelogd
+  if (isApiRoute && !user) {
+    return NextResponse.json({ error: "Niet ingelogd" }, { status: 401 })
   }
 
   if (isAuthPage && user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
+    url.pathname = "/dashboard"
     return NextResponse.redirect(url)
   }
 
